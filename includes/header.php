@@ -1,6 +1,8 @@
 <?php
 // $active is set by each page before including this file, e.g. $active = 'home';
 if (!isset($active)) { $active = ''; }
+require_once __DIR__ . '/Auth.php';
+Auth::boot();
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,6 +27,12 @@ if (!isset($active)) { $active = ''; }
       <li><a href="about.php" class="<?= $active === 'about' ? 'active' : ''; ?>">About</a></li>
       <li><a href="profile.php" class="<?= $active === 'profile' ? 'active' : ''; ?>">Profile</a></li>
       <li><a href="upload.php" class="btn btn-solid <?= $active === 'upload' ? 'active' : ''; ?>" style="padding:9px 16px; font-size:13px;">+ Upload</a></li>
+      <?php if (Auth::check()): ?>
+        <li><a href="logout.php" class="<?= $active === 'logout' ? 'active' : ''; ?>">Log Out</a></li>
+      <?php else: ?>
+        <li><a href="login.php" class="<?= $active === 'login' ? 'active' : ''; ?>">Log In</a></li>
+        <li><a href="signup.php" class="btn <?= $active === 'signup' ? 'active' : ''; ?>" style="padding:9px 16px; font-size:13px;">Sign Up</a></li>
+      <?php endif; ?>
     </ul>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">&#9776;</button>
   </div>

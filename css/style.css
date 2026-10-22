@@ -620,3 +620,20 @@ html.js-ready .reveal.in-view {
   opacity: 1;
   transform: translateY(0) scale(1) rotate(0deg);
 }
+
+/* ---------- form error box (signup, login) ---------- */
+.form-errors {
+  background: var(--bone);
+  border: 3px solid var(--hazard);
+  padding: 16px 20px;
+  margin-bottom: 26px;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.form-errors ul { list-style: none; }
+.form-errors li {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  color: var(--ink);
+  padding: 4px 0;
+}
+.form-errors li::before { content: '! '; color: var(--hazard); font-weight: 700; }
