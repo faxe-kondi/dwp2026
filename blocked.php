@@ -1,6 +1,5 @@
 <?php
-require __DIR__ . '/includes/data.php';
-require __DIR__ . '/includes/helpers.php';
+require __DIR__ . '/includes/profile-bootstrap.php';
 
 $active = 'profile';
 $page_title = 'Blocked Users';

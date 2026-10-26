@@ -158,22 +158,6 @@ $demo_comments = [
     ],
 ];
 
-$demo_profile = [
-    'username' => 'ravens_closet',
-    'display_name' => 'Raven',
-    'avatar_seed' => 'ravens_closet',
-    'bio' => "Digging through bins in Copenhagen so you don't have to. Archive pieces, questionable laundry habits, posting the wins and the misses.",
-    'location' => 'Copenhagen, DK',
-    'joined' => 'Member since Mar 2024',
-    'stats' => [
-        'posts' => 142,
-        'followers' => '8.4K',
-        'following' => 211,
-    ],
-];
-
-// IDs of posts the viewer (ravens_closet) has liked — stand-in for a
-// real `likes` table join once the backend is wired up.
 $demo_liked_post_ids = [2, 3, 4, 7];
 
 // Users the viewer follows — stand-in for a real `follows` table join.

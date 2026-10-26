@@ -2,11 +2,11 @@
 class Database
 {
     private static ?PDO $connection = null;
-
     private const HOST = 'localhost';
     private const NAME = 'deadstock';
     private const USER = 'dsadmin';
     private const PASS = 'IAmAdmin12345!';
+    private const DEBUG = false;
 
     public static function connect(): PDO
     {
@@ -25,6 +25,9 @@ class Database
             } catch (PDOException $e) {
                 error_log('Database connection failed: ' . $e->getMessage());
                 http_response_code(500);
+                if (self::DEBUG) {
+                    die('Database connection failed: ' . htmlspecialchars($e->getMessage()));
+                }
                 die('Something went wrong on our end. Please try again shortly.');
             }
         }

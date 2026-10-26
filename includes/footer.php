@@ -13,6 +13,7 @@
           <li><a href="upload.php">Upload</a></li>
         </ul>
       </div>
+      <?php if (Auth::check()): ?>
       <div>
         <h4>ACCOUNT</h4>
         <ul>
@@ -22,6 +23,7 @@
           <li><a href="blocked.php">Blocked users</a></li>
         </ul>
       </div>
+      <?php endif; ?>
       <div>
         <h4>PROJECT</h4>
         <ul>

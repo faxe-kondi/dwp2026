@@ -1,9 +1,18 @@
 <?php
-/**
- * Shared render helpers — pulled out so pages that show the same kind
- * of card (post grids, user cards) render it identically rather than
- * each page having its own slightly-drifted copy of the markup.
- */
+function ds_profile_view(array $user, int $postCount): array {
+  return [
+    'display_name' => ucwords(str_replace(['.', '_'], ' ', $user['username'])),
+    'username'      => $user['username'],
+    'avatar_seed'   => $user['username'],
+    'bio'           => $user['bio'],
+    'joined'        => 'Member since ' . date('M Y', strtotime($user['created_at'])),
+    'stats' => [
+      'posts'      => $postCount,
+      'followers'  => 0,
+      'following'  => 0,
+    ],
+  ];
+}
 
 function ds_photo_card($p, $liked = false) {
   $img = ds_photo_url($p['img_seed']);

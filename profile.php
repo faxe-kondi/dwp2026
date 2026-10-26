@@ -1,16 +1,7 @@
 <?php
-require __DIR__ . '/includes/data.php';
-require __DIR__ . '/includes/helpers.php';
-
-$user_posts = array_values(array_filter($demo_posts, fn($p) => $p['username'] === $demo_profile['username']));
-
-// Pinned posts float to the top of the regular grid rather than living
-// in a separate tab — usort is stable in PHP 8+, so posts that are
-// equally pinned (or equally not) keep their original relative order.
-usort($user_posts, fn($a, $b) => ($b['pinned'] <=> $a['pinned']));
-
+require __DIR__ . '/includes/profile-bootstrap.php';
 $active = 'profile';
-$page_title = $demo_profile['display_name'];
+$page_title = $profile['display_name'];
 include __DIR__ . '/includes/header.php';
 ?>
 

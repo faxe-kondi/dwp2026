@@ -1,5 +1,4 @@
 <?php
-// $active is set by each page before including this file, e.g. $active = 'home';
 if (!isset($active)) { $active = ''; }
 require_once __DIR__ . '/Auth.php';
 Auth::boot();
@@ -25,7 +24,9 @@ Auth::boot();
     <ul class="nav-links" id="navLinks">
       <li><a href="index.php" class="<?= $active === 'home' ? 'active' : ''; ?>">Home</a></li>
       <li><a href="about.php" class="<?= $active === 'about' ? 'active' : ''; ?>">About</a></li>
-      <li><a href="profile.php" class="<?= $active === 'profile' ? 'active' : ''; ?>">Profile</a></li>
+      <?php if (Auth::check()): ?>
+        <li><a href="profile.php" class="<?= $active === 'profile' ? 'active' : ''; ?>">Profile</a></li>
+      <?php endif; ?>
       <li><a href="upload.php" class="btn btn-solid <?= $active === 'upload' ? 'active' : ''; ?>" style="padding:9px 16px; font-size:13px;">+ Upload</a></li>
       <?php if (Auth::check()): ?>
         <li><a href="logout.php" class="<?= $active === 'logout' ? 'active' : ''; ?>">Log Out</a></li>
