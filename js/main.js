@@ -71,6 +71,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // ---------- avatar picker (settings page — real upload, live preview) ----------
+  var avatarBtn = document.getElementById('avatarPickerBtn');
+  var avatarInput = document.getElementById('avatarInput');
+  var avatarPreview = document.getElementById('avatarPreviewImg');
+  var avatarFileName = document.getElementById('avatarFileName');
+  if (avatarBtn && avatarInput && avatarPreview) {
+    avatarBtn.addEventListener('click', function () {
+      avatarInput.click();
+    });
+    avatarInput.addEventListener('change', function () {
+      if (avatarInput.files && avatarInput.files[0]) {
+        var file = avatarInput.files[0];
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          avatarPreview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+        if (avatarFileName) {
+          avatarFileName.textContent = file.name;
+        }
+      }
+    });
+  }
+
   // ---------- generic prototype-form guard ----------
   document.querySelectorAll('form[data-proto]').forEach(function (form) {
     form.addEventListener('submit', function (e) {

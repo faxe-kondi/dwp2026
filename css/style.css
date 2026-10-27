@@ -637,3 +637,55 @@ html.js-ready .reveal.in-view {
   padding: 4px 0;
 }
 .form-errors li::before { content: '! '; color: var(--hazard); font-weight: 700; }
+
+/* ---------- form success banner (settings) ---------- */
+.form-success {
+  background: var(--acid);
+  border: 3px solid var(--ink);
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 16px 20px;
+  margin-bottom: 26px;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+/* ---------- avatar picker (settings) ---------- */
+.avatar-picker-preview {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  border: 4px solid var(--ink);
+  border-radius: 50%;
+  overflow: hidden;
+  padding: 0;
+  margin-bottom: 4px;
+  cursor: pointer;
+  box-shadow: 5px 5px 0 var(--hazard);
+  background: var(--ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.avatar-picker-preview:hover,
+.avatar-picker-preview:focus-visible {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 var(--hazard);
+  outline: none;
+}
+.avatar-picker-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-picker-edit {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: rgba(18, 18, 18, 0.82);
+  color: var(--bone);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 7px 0;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.avatar-picker-preview:hover .avatar-picker-edit,
+.avatar-picker-preview:focus-visible .avatar-picker-edit { opacity: 1; }
