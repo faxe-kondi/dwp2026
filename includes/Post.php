@@ -12,19 +12,24 @@ class Post
     }
 
 
-    public static function findById(int $id): ?array
+    public static function findById(int $id, ?int $viewerId = null): ?array
     {
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
             'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
                     posts.front_pinned_at, posts.profile_pinned_at,
-                    users.username, users.avatar
+                    users.username, users.avatar,
+                    (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likes,
+                    EXISTS (
+                        SELECT 1 FROM likes
+                        WHERE likes.post_id = posts.id AND likes.user_id = ?
+                    ) AS liked_by_viewer
              FROM posts
              JOIN users ON users.id = posts.user_id
              WHERE posts.id = ?
              LIMIT 1'
         );
-        $stmt->execute([$id]);
+        $stmt->execute([$viewerId ?? 0, $id]);
         $row = $stmt->fetch();
         return $row ?: null;
     }
@@ -35,11 +40,32 @@ class Post
         $stmt = $pdo->prepare(
             'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
                     posts.front_pinned_at, posts.profile_pinned_at,
-                    users.username, users.avatar
+                    users.username, users.avatar,
+                    (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likes,
+                    0 AS liked_by_viewer
              FROM posts
              JOIN users ON users.id = posts.user_id
              WHERE posts.user_id = ?
              ORDER BY (posts.profile_pinned_at IS NULL) ASC, posts.profile_pinned_at DESC, posts.created_at DESC'
+        );
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll();
+    }
+
+    public static function findLikedByUser(int $userId): array
+    {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare(
+            'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
+                    posts.front_pinned_at, posts.profile_pinned_at,
+                    users.username, users.avatar,
+                    (SELECT COUNT(*) FROM likes AS all_likes WHERE all_likes.post_id = posts.id) AS likes,
+                    1 AS liked_by_viewer
+             FROM likes
+             JOIN posts ON posts.id = likes.post_id
+             JOIN users ON users.id = posts.user_id
+             WHERE likes.user_id = ?
+             ORDER BY likes.created_at DESC'
         );
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
@@ -91,6 +117,56 @@ class Post
             $pdo->commit();
             return $filename;
         } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public static function toggleLike(int $postId, int $userId): ?array
+    {
+        $pdo = Database::connect();
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare('SELECT user_id FROM posts WHERE id = ? FOR UPDATE');
+            $stmt->execute([$postId]);
+            $ownerId = $stmt->fetchColumn();
+
+            if ($ownerId === false) {
+                $pdo->rollBack();
+                return null;
+            }
+            if ((int) $ownerId === $userId) {
+                $pdo->rollBack();
+                throw new DomainException('You cannot like your own post.');
+            }
+
+            $stmt = $pdo->prepare('SELECT 1 FROM likes WHERE user_id = ? AND post_id = ?');
+            $stmt->execute([$userId, $postId]);
+            $liked = $stmt->fetchColumn() !== false;
+
+            if ($liked) {
+                $stmt = $pdo->prepare('DELETE FROM likes WHERE user_id = ? AND post_id = ?');
+                $stmt->execute([$userId, $postId]);
+            } else {
+                $stmt = $pdo->prepare('INSERT INTO likes (user_id, post_id) VALUES (?, ?)');
+                $stmt->execute([$userId, $postId]);
+            }
+
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM likes WHERE post_id = ?');
+            $stmt->execute([$postId]);
+            $likeCount = (int) $stmt->fetchColumn();
+            $pdo->commit();
+
+            return ['liked' => !$liked, 'likes' => $likeCount];
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        } catch (DomainException $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }

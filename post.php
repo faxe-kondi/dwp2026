@@ -7,7 +7,8 @@ require __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/Post.php';
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 1;
-$realRow = Post::findById($id);
+$currentUser = Auth::user();
+$realRow = Post::findById($id, $currentUser ? (int) $currentUser['id'] : null);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     Csrf::verifyOrFail();
@@ -51,7 +52,6 @@ if ($realRow) {
     if (!$post) { $post = $demo_posts[0]; }
 }
 
-$currentUser = Auth::user();
 $isOwner = !empty($post['is_real'])
     && $currentUser
     && (int) $realRow['user_id'] === (int) $currentUser['id'];
@@ -119,8 +119,27 @@ include __DIR__ . '/includes/header.php';
       <?php endif; ?>
 
       <div class="post-stats-row">
-        <?php if (!$isOwner): ?>
-          <button class="like-btn" data-likes="<?= $post['likes']; ?>">&#9825; <span class="like-count"><?= $post['likes']; ?></span> likes</button>
+        <?php if ($isOwner): ?>
+          <span class="like-count-display" aria-label="<?= $post['likes']; ?> likes">
+            <svg class="like-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+            <span class="like-count"><?= $post['likes']; ?></span>
+          </span>
+        <?php else: ?>
+          <?php if (!empty($post['is_real']) && Auth::check()): ?>
+            <button type="button" class="like-btn<?= !empty($post['liked_by_viewer']) ? ' liked' : ''; ?>" data-like-url="includes/like.php" data-post-id="<?= $post['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-likes="<?= $post['likes']; ?>" data-liked="<?= !empty($post['liked_by_viewer']) ? 'true' : 'false'; ?>" aria-pressed="<?= !empty($post['liked_by_viewer']) ? 'true' : 'false'; ?>" aria-label="<?= !empty($post['liked_by_viewer']) ? 'Unlike post' : 'Like post'; ?>">
+          <?php elseif (!empty($post['is_real'])): ?>
+            <a class="like-btn" href="login.php" aria-label="Log in to like this post">
+          <?php else: ?>
+            <button type="button" class="like-btn" data-likes="<?= $post['likes']; ?>">
+          <?php endif; ?>
+              <svg class="like-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+              <span class="like-count"><?= $post['likes']; ?></span>
+              <span class="like-label"><?= !empty($post['liked_by_viewer']) ? 'Liked' : 'Like'; ?></span>
+          <?php if (!empty($post['is_real']) && !Auth::check()): ?>
+            </a>
+          <?php else: ?>
+            </button>
+          <?php endif; ?>
         <?php endif; ?>
         <span>&#128172; <?= count($post_comments); ?> comments</span>
         <span><?= $post['hot'] ? '&#128293; trending' : 'in the feed'; ?></span>

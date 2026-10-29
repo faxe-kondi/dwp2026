@@ -29,16 +29,65 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ---------- like button (visual only) ----------
+  // ---------- post likes ----------
   document.querySelectorAll('.like-btn[data-likes]').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
+      if (btn.disabled) return;
+
+      if (btn.hasAttribute('data-like-url')) {
+        btn.disabled = true;
+        btn.classList.add('is-saving');
+
+        var body = new URLSearchParams();
+        body.set('post_id', btn.getAttribute('data-post-id'));
+        body.set('csrf_token', btn.getAttribute('data-csrf-token'));
+
+        fetch(btn.getAttribute('data-like-url'), {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+          body: body.toString()
+        }).then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok) {
+              var messages = {
+                login_required: 'Log in to like posts.',
+                own_post: 'You cannot like your own post.',
+                post_not_found: 'This post is no longer available.',
+                invalid_request: 'Your session expired. Refresh the page and try again.'
+              };
+              throw new Error(messages[data.error] || 'Could not save your like. Please try again.');
+            }
+            return data;
+          });
+        }).then(function (data) {
+          btn.classList.toggle('liked', data.liked);
+          btn.setAttribute('data-liked', data.liked ? 'true' : 'false');
+          btn.setAttribute('aria-pressed', data.liked ? 'true' : 'false');
+          btn.setAttribute('aria-label', data.liked ? 'Unlike post' : 'Like post');
+          btn.setAttribute('data-likes', data.likes);
+
+          var countEl = btn.querySelector('.like-count');
+          if (countEl) countEl.textContent = data.likes;
+          var labelEl = btn.querySelector('.like-label');
+          if (labelEl) labelEl.textContent = data.liked ? 'Liked' : 'Like';
+        }).catch(function (error) {
+          showToast(error.message);
+        }).then(function () {
+          btn.disabled = false;
+          btn.classList.remove('is-saving');
+        });
+        return;
+      }
+
       var base = parseInt(btn.getAttribute('data-likes'), 10) || 0;
       var liked = btn.classList.toggle('liked');
       var countEl = btn.querySelector('.like-count');
       if (countEl) {
         countEl.textContent = liked ? base + 1 : base;
       }
+      btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
     });
   });
 

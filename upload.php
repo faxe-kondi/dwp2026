@@ -3,8 +3,7 @@ require_once __DIR__ . '/includes/Auth.php';
 Auth::boot();
 Auth::requireLogin();
 require_once __DIR__ . '/includes/Csrf.php';
-require_once __DIR__ . '/includes/Post.php';
-require_once __DIR__ . '/includes/Image.php';
+require_once __DIR__ . '/includes/PostService.php';
 
 $errors = [];
 $caption = '';
@@ -14,54 +13,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $caption = trim($_POST['caption'] ?? '');
 
-    if (strlen($caption) > 1000) {
-        $errors[] = 'Caption must be 1000 characters or fewer.';
-    }
-
-    $newFilename = null;
-    if (empty($_FILES['photo']) || $_FILES['photo']['error'] === UPLOAD_ERR_NO_FILE) {
-        $errors[] = 'Choose a photo to post.';
-    } elseif ($_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
-        if (in_array($_FILES['photo']['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
-            $errors[] = 'That image is too large for the server to accept. Try a smaller file.';
-        } else {
-            $errors[] = 'There was a problem uploading that file. Please try again.';
-        }
-    } else {
-        $newFilename = bin2hex(random_bytes(16)) . '.webp';
-    }
-
-    if (empty($errors)) {
-        $uploadDir = __DIR__ . '/uploads/posts/';
-
-        try {
-            if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
-                throw new RuntimeException('Could not create the uploads directory.');
-            }
-            PostImage::saveSquare($_FILES['photo']['tmp_name'], $uploadDir . $newFilename);
-
-            $postId = Post::create((int) Auth::user()['id'], $newFilename, $caption !== '' ? $caption : null);
-
-            header('Location: post.php?id=' . $postId);
-            exit;
-        } catch (InvalidArgumentException $e) {
-            if (isset($uploadDir, $newFilename) && is_file($uploadDir . $newFilename) && !unlink($uploadDir . $newFilename)) {
-                error_log('Could not remove an invalid post image upload.');
-            }
-            $errors[] = $e->getMessage();
-        } catch (RuntimeException $e) {
-            if (isset($uploadDir, $newFilename) && is_file($uploadDir . $newFilename) && !unlink($uploadDir . $newFilename)) {
-                error_log('Could not remove a failed post image upload.');
-            }
-            error_log('Post upload failed: ' . $e->getMessage());
-            $errors[] = 'Something went wrong saving your post. Please try again.';
-        } catch (PDOException $e) {
-            if (isset($uploadDir, $newFilename) && is_file($uploadDir . $newFilename) && !unlink($uploadDir . $newFilename)) {
-                error_log('Could not remove a failed post image upload.');
-            }
-            error_log('Post creation failed: ' . $e->getMessage());
-            $errors[] = 'Something went wrong saving your post. Please try again.';
-        }
+    try {
+        $postId = PostService::createPost(
+            (int) Auth::user()['id'],
+            $caption,
+            $_FILES['photo'] ?? null
+        );
+        header('Location: post.php?id=' . $postId);
+        exit;
+    } catch (InvalidArgumentException $e) {
+        $errors[] = $e->getMessage();
+    } catch (RuntimeException $e) {
+        error_log('Post upload failed: ' . $e->getMessage());
+        $errors[] = 'Something went wrong saving your post. Please try again.';
+    } catch (PDOException $e) {
+        error_log('Post creation failed: ' . $e->getMessage());
+        $errors[] = 'Something went wrong saving your post. Please try again.';
     }
 }
 

@@ -4,7 +4,7 @@ Auth::boot();
 Auth::requireLogin();
 require_once __DIR__ . '/includes/Csrf.php';
 require_once __DIR__ . '/includes/Post.php';
-require_once __DIR__ . '/includes/Image.php';
+require_once __DIR__ . '/includes/PostService.php';
 require_once __DIR__ . '/includes/helpers.php';
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
@@ -24,73 +24,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     Csrf::verifyOrFail();
     $caption = trim($_POST['caption'] ?? '');
 
-    if (strlen($caption) > 1000) {
-        $errors[] = 'Caption must be 1000 characters or fewer.';
-    }
-
-    $newFilename = null;
-    $upload = $_FILES['photo'] ?? null;
-    if ($upload && $upload['error'] !== UPLOAD_ERR_NO_FILE) {
-        if ($upload['error'] !== UPLOAD_ERR_OK) {
-            if (in_array($upload['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
-                $errors[] = 'That image is too large for the server to accept. Try a smaller file.';
-            } else {
-                $errors[] = 'There was a problem uploading that file. Please try again.';
-            }
-        } else {
-            $newFilename = bin2hex(random_bytes(16)) . '.webp';
+    try {
+        $result = PostService::updatePost(
+            $id,
+            $userId,
+            $row['filename'],
+            $caption,
+            $_FILES['photo'] ?? null
+        );
+        if (!$result['updated']) {
+            http_response_code(404);
+            exit('Post not found.');
         }
-    }
 
-    $savedPath = null;
-    $discardSavedUpload = static function () use (&$savedPath, $id): void {
-        if ($savedPath !== null && is_file($savedPath) && !unlink($savedPath)) {
-            error_log('Could not remove a staged image after editing post #' . $id . ' failed.');
+        $notice = $result['notice'];
+        if ($notice === '') {
+            header('Location: post.php?id=' . $id);
+            exit;
         }
-    };
-
-    if (empty($errors)) {
-        try {
-            if ($newFilename !== null) {
-                $uploadDir = __DIR__ . '/uploads/posts/';
-                if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
-                    throw new RuntimeException('Could not create the uploads directory.');
-                }
-                $savedPath = $uploadDir . $newFilename;
-                PostImage::saveSquare($upload['tmp_name'], $savedPath);
-            }
-
-            if (!Post::updateOwned($id, $userId, $newFilename, $caption !== '' ? $caption : null)) {
-                $discardSavedUpload();
-                http_response_code(404);
-                exit('Post not found.');
-            }
-
-            if ($newFilename !== null) {
-                $oldPath = __DIR__ . '/uploads/posts/' . basename($row['filename']);
-                if (basename($row['filename']) !== $row['filename'] || (is_file($oldPath) && !unlink($oldPath))) {
-                    error_log('Post image cleanup failed after editing post #' . $id . '.');
-                    $notice = 'Post updated, but the previous image could not be removed.';
-                }
-            }
-
-            if ($notice === '') {
-                header('Location: post.php?id=' . $id);
-                exit;
-            }
-            $row = Post::findById($id);
-        } catch (InvalidArgumentException $e) {
-            $discardSavedUpload();
-            $errors[] = $e->getMessage();
-        } catch (PDOException $e) {
-            $discardSavedUpload();
-            error_log('Post edit failed: ' . $e->getMessage());
-            $errors[] = 'Something went wrong saving your changes. Please try again.';
-        } catch (RuntimeException $e) {
-            $discardSavedUpload();
-            error_log('Post edit failed: ' . $e->getMessage());
-            $errors[] = 'Something went wrong saving your changes. Please try again.';
-        }
+        $row = Post::findById($id);
+    } catch (InvalidArgumentException $e) {
+        $errors[] = $e->getMessage();
+    } catch (PDOException $e) {
+        error_log('Post edit failed: ' . $e->getMessage());
+        $errors[] = 'Something went wrong saving your changes. Please try again.';
+    } catch (RuntimeException $e) {
+        error_log('Post edit failed: ' . $e->getMessage());
+        $errors[] = 'Something went wrong saving your changes. Please try again.';
     }
 }
 
