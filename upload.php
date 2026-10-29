@@ -1,5 +1,70 @@
 <?php
-require __DIR__ . '/includes/data.php';
+require_once __DIR__ . '/includes/Auth.php';
+Auth::boot();
+Auth::requireLogin();
+require_once __DIR__ . '/includes/Csrf.php';
+require_once __DIR__ . '/includes/Post.php';
+require_once __DIR__ . '/includes/Image.php';
+
+$errors = [];
+$caption = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    Csrf::verifyOrFail();
+
+    $caption = trim($_POST['caption'] ?? '');
+
+    if (strlen($caption) > 1000) {
+        $errors[] = 'Caption must be 1000 characters or fewer.';
+    }
+
+    $newFilename = null;
+    if (empty($_FILES['photo']) || $_FILES['photo']['error'] === UPLOAD_ERR_NO_FILE) {
+        $errors[] = 'Choose a photo to post.';
+    } elseif ($_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+        if (in_array($_FILES['photo']['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+            $errors[] = 'That image is too large for the server to accept. Try a smaller file.';
+        } else {
+            $errors[] = 'There was a problem uploading that file. Please try again.';
+        }
+    } else {
+        $newFilename = bin2hex(random_bytes(16)) . '.webp';
+    }
+
+    if (empty($errors)) {
+        $uploadDir = __DIR__ . '/uploads/posts/';
+
+        try {
+            if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                throw new RuntimeException('Could not create the uploads directory.');
+            }
+            PostImage::saveSquare($_FILES['photo']['tmp_name'], $uploadDir . $newFilename);
+
+            $postId = Post::create((int) Auth::user()['id'], $newFilename, $caption !== '' ? $caption : null);
+
+            header('Location: post.php?id=' . $postId);
+            exit;
+        } catch (InvalidArgumentException $e) {
+            if (isset($uploadDir, $newFilename) && is_file($uploadDir . $newFilename) && !unlink($uploadDir . $newFilename)) {
+                error_log('Could not remove an invalid post image upload.');
+            }
+            $errors[] = $e->getMessage();
+        } catch (RuntimeException $e) {
+            if (isset($uploadDir, $newFilename) && is_file($uploadDir . $newFilename) && !unlink($uploadDir . $newFilename)) {
+                error_log('Could not remove a failed post image upload.');
+            }
+            error_log('Post upload failed: ' . $e->getMessage());
+            $errors[] = 'Something went wrong saving your post. Please try again.';
+        } catch (PDOException $e) {
+            if (isset($uploadDir, $newFilename) && is_file($uploadDir . $newFilename) && !unlink($uploadDir . $newFilename)) {
+                error_log('Could not remove a failed post image upload.');
+            }
+            error_log('Post creation failed: ' . $e->getMessage());
+            $errors[] = 'Something went wrong saving your post. Please try again.';
+        }
+    }
+}
+
 $active = 'upload';
 $page_title = 'Upload';
 include __DIR__ . '/includes/header.php';
@@ -15,40 +80,42 @@ include __DIR__ . '/includes/header.php';
 <div class="stripe-bar" aria-hidden="true"></div>
 
 <section class="page-body">
-  <div class="wrap upload-layout">
+  <div class="wrap upload-wrap">
 
-    <div>
-      <div class="dropzone" id="dropzone">
-        <div class="icon">&#8593;</div>
-        <h3>Drag a photo here, or click to browse</h3>
-        <p>JPG or PNG, up to 10MB &middot; <span id="fileName">no file selected</span></p>
-        <input type="file" id="fileInput" accept="image/*" style="display:none;">
+    <?php if (!empty($errors)): ?>
+      <div class="form-errors">
+        <ul>
+          <?php foreach ($errors as $err): ?>
+            <li><?= htmlspecialchars($err); ?></li>
+          <?php endforeach; ?>
+        </ul>
       </div>
-      <p class="proto-note">This uploader is a front-end mockup only. No file is actually sent or stored &mdash; that comes once the database is connected.</p>
-    </div>
+    <?php endif; ?>
 
-    <form data-proto>
-      <div class="field">
-        <label for="caption">Caption</label>
-        <textarea id="caption" rows="4" placeholder="Tell the story behind the fit..."></textarea>
-      </div>
+    <form method="post" action="upload.php" enctype="multipart/form-data" class="upload-layout">
+      <?= Csrf::field(); ?>
 
-      <div class="field">
-        <label for="tags">Tags</label>
-        <input type="text" id="tags" value="thrifted, archive" placeholder="e.g. thrifted, restock, diy">
-        <div class="tag-input-preview">
-          <span class="chip">#thrifted</span>
-          <span class="chip">#archive</span>
+      <div class="upload-photo">
+        <div class="field">
+          <div class="dropzone" id="dropzone">
+            <img id="dropzonePreview" alt="Selected photo preview" hidden>
+            <div class="icon">&#8593;</div>
+            <h3>Drag a photo here, or click to browse</h3>
+            <p>JPG, PNG, or WEBP &middot; optimized on upload &middot; <span id="fileName">no file selected</span></p>
+            <input type="file" name="photo" id="fileInput" accept="image/png,image/jpeg,image/webp" required style="display:none;">
+          </div>
         </div>
       </div>
 
-      <div class="field">
-        <label for="location">Location (optional)</label>
-        <input type="text" id="location" placeholder="Where'd you find it?">
-      </div>
+      <div class="upload-fields">
+        <div class="field">
+          <label for="caption">Caption</label>
+          <textarea id="caption" name="caption" rows="6" maxlength="1000" placeholder="Tell the story behind the fit..."><?= htmlspecialchars($caption); ?></textarea>
+          <p class="field-hint">Up to 1000 characters. Optional.</p>
+        </div>
 
-      <button type="submit" class="btn btn-solid" style="width:100%; justify-content:center; padding:16px;">Drop it</button>
-      <p class="field-hint proto-submit-note" style="margin-top:12px; text-align:center;"></p>
+        <button type="submit" class="btn btn-solid" style="width:100%; justify-content:center; padding:16px;">Drop it</button>
+      </div>
     </form>
 
   </div>

@@ -24,22 +24,62 @@ function ds_profile_view(array $user, int $postCount): array {
   ];
 }
 
+function ds_time_ago(string $datetime): string {
+  $diff = time() - strtotime($datetime);
+  if ($diff < 60) { return 'just now'; }
+  if ($diff < 3600) { return floor($diff / 60) . 'm ago'; }
+  if ($diff < 86400) { return floor($diff / 3600) . 'h ago'; }
+  if ($diff < 604800) { return floor($diff / 86400) . 'd ago'; }
+  return date('M j', strtotime($datetime));
+}
+
+function ds_post_view(array $row): array {
+  return [
+    'id'            => (int) $row['id'],
+    'username'      => $row['username'],
+    'avatar_file'   => $row['avatar'] ?? 'default.png',
+    'image_file'    => $row['filename'],
+    'caption'       => $row['caption'] ?? '',
+    'tags'          => [],
+    'likes'         => 0,
+    'comment_count' => 0,
+    'time'          => ds_time_ago($row['created_at']),
+    'hot'           => false,
+    'pinned'        => !empty($row['profile_pinned_at']),
+    'is_real'       => true,
+  ];
+}
+
+function ds_post_avatar_url(array $p, int $size = 96): string {
+  if (!empty($p['is_real'])) {
+    return ds_user_avatar_url(['username' => $p['username'], 'avatar' => $p['avatar_file']], $size);
+  }
+  return ds_avatar_url($p['avatar_seed'], $size);
+}
+
+function ds_post_image_url(array $p, int $w = 800, int $h = 1000): string {
+  if (!empty($p['is_real'])) {
+    return 'uploads/posts/' . $p['image_file'];
+  }
+  return ds_photo_url($p['img_seed'], $w, $h);
+}
+
 function ds_photo_card($p, $liked = false) {
-  $img = ds_photo_url($p['img_seed']);
-  $avatar = ds_avatar_url($p['avatar_seed'], 60);
+  $img = ds_post_image_url($p);
+  $avatar = ds_post_avatar_url($p, 60);
   $likeClass = $liked ? 'like-btn liked' : 'like-btn';
   $reportTarget = '@' . $p['username'] . "'s post";
   ?>
   <article class="photo-card reveal">
     <div class="photo-card-inner">
       <a href="post.php?id=<?= $p['id']; ?>" class="frame" style="display:block;">
-        <?php if ($p['hot']): ?><span class="flame-badge">&#128293; HOT</span><?php endif; ?>
+        <?php if (!empty($p['hot'])): ?><span class="flame-badge">&#128293; HOT</span><?php endif; ?>
         <?php if (!empty($p['pinned'])): ?><span class="pin-badge">&#128204; Pinned</span><?php endif; ?>
-        <img src="<?= $img; ?>" alt="<?= htmlspecialchars($p['caption']); ?>" loading="lazy">
+        <img src="<?= htmlspecialchars($img); ?>" alt="<?= htmlspecialchars($p['caption']); ?>" loading="lazy">
       </a>
       <div class="photo-meta">
         <a href="profile.php" class="who">
-          <img src="<?= $avatar; ?>" alt="<?= htmlspecialchars($p['username']); ?>">
+          <img src="<?= htmlspecialchars($avatar); ?>" alt="<?= htmlspecialchars($p['username']); ?>">
           <span>@<?= htmlspecialchars($p['username']); ?></span>
         </a>
         <a href="post.php?id=<?= $p['id']; ?>" style="color:inherit;">
@@ -48,7 +88,7 @@ function ds_photo_card($p, $liked = false) {
         <div class="stats">
           <button class="<?= $likeClass; ?>" data-likes="<?= $p['likes']; ?>">&#9825; <span class="like-count"><?= $p['likes']; ?></span></button>
           <span>&#128172; <?= $p['comment_count']; ?></span>
-          <span><?= $p['time']; ?></span>
+          <span><?= htmlspecialchars($p['time']); ?></span>
           <button class="icon-flag" data-report-type="post" data-report-target="<?= htmlspecialchars($reportTarget); ?>" title="Report post" aria-label="Report post">&#128681;</button>
         </div>
       </div>

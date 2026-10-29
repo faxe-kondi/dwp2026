@@ -10,13 +10,13 @@
         <ul>
           <li><a href="index.php">Home</a></li>
           <li><a href="about.php">About</a></li>
-          <li><a href="upload.php">Upload</a></li>
         </ul>
       </div>
       <?php if (Auth::check()): ?>
       <div>
         <h4>ACCOUNT</h4>
         <ul>
+          <li><a href="upload.php">Upload</a></li>
           <li><a href="profile.php">Your profile</a></li>
           <li><a href="liked.php">Your likes</a></li>
           <li><a href="following.php">Following</a></li>
