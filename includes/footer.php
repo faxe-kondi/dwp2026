@@ -9,6 +9,7 @@
         <h4>SITE</h4>
         <ul>
           <li><a href="index.php">Home</a></li>
+          <li><a href="browse.php">Browse</a></li>
           <li><a href="about.php">About</a></li>
         </ul>
       </div>

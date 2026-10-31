@@ -23,6 +23,7 @@ Auth::boot();
     <a href="index.php" class="brand">DEAD<span>STOCK</span></a>
     <ul class="nav-links" id="navLinks">
       <li><a href="index.php" class="<?= $active === 'home' ? 'active' : ''; ?>">Home</a></li>
+      <li><a href="browse.php" class="<?= $active === 'browse' ? 'active' : ''; ?>">Browse</a></li>
       <li><a href="about.php" class="<?= $active === 'about' ? 'active' : ''; ?>">About</a></li>
       <?php if (Auth::check()): ?>
         <li><a href="profile.php" class="<?= $active === 'profile' ? 'active' : ''; ?>">Profile</a></li>

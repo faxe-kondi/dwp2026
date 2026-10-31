@@ -94,6 +94,46 @@ class Post
         );
     }
 
+    public static function countAll(): int
+    {
+        $pdo = Database::connect();
+        return (int) $pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn();
+    }
+
+    public static function findBrowsePage(
+        int $limit,
+        int $offset,
+        ?int $viewerId = null,
+        string $sort = 'newest',
+        int $randomSeed = 1
+    ): array
+    {
+        switch ($sort) {
+            case 'likes':
+                $orderBy = 'ORDER BY likes DESC, posts.created_at DESC, posts.id DESC';
+                break;
+            case 'random':
+                if ($randomSeed < 1 || $randomSeed > 2147483647) {
+                    throw new InvalidArgumentException('Random sort seed is out of range.');
+                }
+                $orderBy = 'ORDER BY RAND(' . $randomSeed . '), posts.id';
+                break;
+            case 'newest':
+                $orderBy = 'ORDER BY posts.created_at DESC, posts.id DESC';
+                break;
+            default:
+                throw new InvalidArgumentException('Unsupported browse sort order.');
+        }
+
+        return self::findFeed(
+            $orderBy,
+            $viewerId,
+            false,
+            $limit,
+            $offset
+        );
+    }
+
     public static function findFrontPinned(?int $viewerId = null): array
     {
         return self::findFeed(
@@ -109,9 +149,14 @@ class Post
         string $feedSql,
         ?int $viewerId,
         bool $includeHotLikes = false,
-        ?int $limit = 8
+        ?int $limit = 8,
+        int $offset = 0
     ): array
     {
+        if (($limit !== null && $limit < 1) || $offset < 0) {
+            throw new InvalidArgumentException('Feed limits must be positive and offsets must be non-negative.');
+        }
+
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
             'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
@@ -126,7 +171,7 @@ class Post
              FROM posts
              JOIN users ON users.id = posts.user_id
              ' . $feedSql
-            . ($limit === null ? '' : ' LIMIT ' . $limit)
+            . ($limit === null ? '' : ' LIMIT ' . $limit . ' OFFSET ' . $offset)
         );
         $stmt->execute([$viewerId ?? 0]);
         return $stmt->fetchAll();

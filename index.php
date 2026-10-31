@@ -73,7 +73,10 @@ include __DIR__ . '/includes/header.php';
     <div class="section-head">
       <span class="ghost-num" aria-hidden="true">02</span>
       <h2>New pictures</h2>
-      <a href="upload.php" class="section-link">Post yours &rarr;</a>
+      <div class="section-head-actions">
+        <a href="browse.php" class="section-link">Browse all &rarr;</a>
+        <a href="upload.php" class="section-link">Post yours &rarr;</a>
+      </div>
     </div>
     <div class="photo-grid">
       <?php if ($newest_posts): ?>
