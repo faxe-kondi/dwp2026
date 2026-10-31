@@ -234,8 +234,7 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 @media (max-width: 980px) { .photo-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .photo-grid { grid-template-columns: 1fr; } }
 
-#hot .photo-grid .photo-card:first-child { grid-column: span 2; }
-@media (max-width: 520px) { #hot .photo-grid .photo-card:first-child { grid-column: span 1; } }
+#hot .photo-grid .photo-card:first-child { grid-column: span 1; }
 
 .photo-card { position: relative; }
 .photo-card-inner {

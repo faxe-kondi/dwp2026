@@ -25,8 +25,8 @@ function ds_post_view(array $row): array {
     'liked_by_viewer' => !empty($row['liked_by_viewer']),
     'comment_count' => 0,
     'time'          => ds_time_ago($row['created_at']),
-    'hot'           => false,
-    'pinned'        => !empty($row['profile_pinned_at']),
+    'hot'           => !empty($row['hot_likes']),
+    'pinned'        => !empty($row['front_pinned_at']) || !empty($row['profile_pinned_at']),
     'is_real'       => true,
   ];
 }

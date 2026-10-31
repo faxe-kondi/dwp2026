@@ -1,19 +1,23 @@
 <?php
+require_once __DIR__ . '/includes/Auth.php';
+Auth::boot();
+require_once __DIR__ . '/includes/Post.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/helpers.php';
+$currentUser = Auth::user();
+$viewerId = $currentUser ? (int) $currentUser['id'] : null;
+$hot_posts = array_map('ds_post_view', Post::findHot($viewerId));
+$newest_posts = array_map('ds_post_view', Post::findNewest($viewerId));
+$pinned_posts = array_map('ds_post_view', Post::findFrontPinned($viewerId));
 $active = 'home';
 $page_title = 'Home';
 include __DIR__ . '/includes/header.php';
-
-$hot_posts    = array_values(array_filter($demo_posts, fn($p) => $p['hot']));
-$newest_posts = $demo_posts;
-$pinned_posts = array_values(array_filter($demo_posts, fn($p) => $p['pinned']));
 ?>
 
 <section class="hero">
   <div class="wrap">
     <div class="hero-copy">
-      <span class="kicker-tag">LIVE FEED &mdash; UPDATED HOURLY</span>
+      <span class="kicker-tag">LIVE FEED &mdash; UPDATED NOW</span>
       <h1>
         <span class="stack-ghost" aria-hidden="true">Fits worth<br>camping for.</span>
         <span class="stack-main">Fits worth<br><em>camping for.</em></span>
@@ -35,7 +39,7 @@ $pinned_posts = array_values(array_filter($demo_posts, fn($p) => $p['pinned']));
         <span class="tag-hole"></span>
         <dl>
           <dt>DROP</dt><dd>#118</dd>
-          <dt>POSTS</dt><dd><?= count($demo_posts); ?> today</dd>
+          <dt>FEED</dt><dd>LIVE</dd>
           <dt>STATUS</dt><dd>LIVE</dd>
         </dl>
       </div>
@@ -50,10 +54,14 @@ $pinned_posts = array_values(array_filter($demo_posts, fn($p) => $p['pinned']));
     <div class="section-head">
       <span class="ghost-num" aria-hidden="true">01</span>
       <h2>Hot right now</h2>
-      <span class="count-flag"><?= count($hot_posts); ?> posts climbing</span>
+      <span class="count-flag">Most likes in the last 48 hours</span>
     </div>
     <div class="photo-grid">
-      <?php foreach ($hot_posts as $p) ds_photo_card($p); ?>
+      <?php if ($hot_posts): ?>
+        <?php foreach ($hot_posts as $p) ds_photo_card($p); ?>
+      <?php else: ?>
+        <p class="empty-state">No pictures have received likes in the last 48 hours.</p>
+      <?php endif; ?>
     </div>
   </div>
 </section>
@@ -68,7 +76,11 @@ $pinned_posts = array_values(array_filter($demo_posts, fn($p) => $p['pinned']));
       <a href="upload.php" class="section-link">Post yours &rarr;</a>
     </div>
     <div class="photo-grid">
-      <?php foreach (array_slice($newest_posts, 0, 8) as $p) ds_photo_card($p); ?>
+      <?php if ($newest_posts): ?>
+        <?php foreach ($newest_posts as $p) ds_photo_card($p); ?>
+      <?php else: ?>
+        <p class="empty-state">No pictures yet. Be the first to post one.</p>
+      <?php endif; ?>
     </div>
   </div>
 </section>
@@ -83,57 +95,31 @@ $pinned_posts = array_values(array_filter($demo_posts, fn($p) => $p['pinned']));
     <div class="section-head">
       <span class="ghost-num" aria-hidden="true">03</span>
       <h2>Pinned</h2>
-      <span class="count-flag">Picked by the mods this week</span>
+      <span class="count-flag">Front-page picks</span>
     </div>
     <div class="pin-grid">
-      <?php
-      $tilts = [-2.4, 1.6, -1.1, 2.1];
-      foreach ($pinned_posts as $i => $p):
-        $tilt = $tilts[$i % count($tilts)];
+      <?php if ($pinned_posts):
+        $tilts = [-2.4, 1.6, -1.1, 2.1];
+        foreach ($pinned_posts as $i => $p):
+          $tilt = $tilts[$i % count($tilts)];
       ?>
-        <a href="post.php?id=<?= $p['id']; ?>" class="pin-card reveal">
-          <div class="pin-card-inner" style="--tilt: <?= $tilt; ?>deg;">
-            <span class="pin-dot"></span>
-            <div class="frame">
-              <img src="<?= ds_photo_url($p['img_seed']); ?>" alt="<?= htmlspecialchars($p['caption']); ?>">
+          <a href="post.php?id=<?= $p['id']; ?>" class="pin-card reveal">
+            <div class="pin-card-inner" style="--tilt: <?= $tilt; ?>deg;">
+              <span class="pin-dot"></span>
+              <div class="frame">
+                <img src="<?= htmlspecialchars(ds_post_image_url($p)); ?>" alt="<?= htmlspecialchars($p['caption']); ?>" loading="lazy">
+              </div>
+              <p class="cap"><b>@<?= htmlspecialchars($p['username']); ?></b> &mdash; <?= htmlspecialchars(mb_strimwidth($p['caption'], 0, 60, '…')); ?></p>
             </div>
-            <p class="cap"><b>@<?= htmlspecialchars($p['username']); ?></b> &mdash; <?= htmlspecialchars(mb_strimwidth($p['caption'], 0, 60, '…')); ?></p>
-          </div>
-        </a>
-      <?php endforeach; ?>
+          </a>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p class="empty-state">No pictures have been pinned yet.</p>
+      <?php endif; ?>
     </div>
   </div>
 </section>
 
 <div class="stripe-bar" aria-hidden="true"></div>
-
-<section class="section section--dark">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="ghost-num" aria-hidden="true">04</span>
-      <h2>New comments</h2>
-      <span class="count-flag">across every post</span>
-    </div>
-    <div class="comment-feed">
-      <?php foreach ($demo_comments as $c):
-        $post = current(array_filter($demo_posts, fn($p) => $p['id'] === $c['post_id']));
-      ?>
-        <div class="comment-row reveal">
-          <img src="<?= ds_avatar_url($c['avatar_seed'], 44); ?>" alt="<?= htmlspecialchars($c['username']); ?>">
-          <div>
-            <span class="who">@<?= htmlspecialchars($c['username']); ?>
-              <?php if ($post): ?><span class="on">on <a href="post.php?id=<?= $post['id']; ?>" style="color:inherit;text-decoration:underline;">@<?= htmlspecialchars($post['username']); ?>'s post</a></span><?php endif; ?>
-            </span>
-            <p>&ldquo;<?= htmlspecialchars($c['text']); ?>&rdquo;</p>
-          </div>
-          <div class="comment-row-meta">
-            <time><?= $c['time']; ?></time>
-            <button class="icon-flag" data-report-type="comment" data-report-target="@<?= htmlspecialchars($c['username']); ?>'s comment" title="Report comment" aria-label="Report comment">&#128681;</button>
-          </div>
-        </div>
-      <?php endforeach; ?>
-    </div>
-  </div>
-</section>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -71,6 +71,67 @@ class Post
         return $stmt->fetchAll();
     }
 
+    public static function findHot(?int $viewerId = null): array
+    {
+        return self::findFeed(
+            'JOIN (
+                SELECT post_id, COUNT(*) AS hot_likes
+                FROM likes
+                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 48 HOUR)
+                GROUP BY post_id
+             ) AS recent_likes ON recent_likes.post_id = posts.id
+             ORDER BY recent_likes.hot_likes DESC, posts.created_at DESC',
+            $viewerId,
+            true
+        );
+    }
+
+    public static function findNewest(?int $viewerId = null): array
+    {
+        return self::findFeed(
+            'ORDER BY posts.created_at DESC',
+            $viewerId
+        );
+    }
+
+    public static function findFrontPinned(?int $viewerId = null): array
+    {
+        return self::findFeed(
+            'WHERE posts.front_pinned_at IS NOT NULL
+             ORDER BY posts.front_pinned_at DESC, posts.created_at DESC',
+            $viewerId,
+            false,
+            null
+        );
+    }
+
+    private static function findFeed(
+        string $feedSql,
+        ?int $viewerId,
+        bool $includeHotLikes = false,
+        ?int $limit = 8
+    ): array
+    {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare(
+            'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
+                    posts.front_pinned_at, posts.profile_pinned_at,
+                    users.username, users.avatar,
+                    ' . ($includeHotLikes ? 'recent_likes.hot_likes' : '0') . ' AS hot_likes,
+                    (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likes,
+                    EXISTS (
+                        SELECT 1 FROM likes
+                        WHERE likes.post_id = posts.id AND likes.user_id = ?
+                    ) AS liked_by_viewer
+             FROM posts
+             JOIN users ON users.id = posts.user_id
+             ' . $feedSql
+            . ($limit === null ? '' : ' LIMIT ' . $limit)
+        );
+        $stmt->execute([$viewerId ?? 0]);
+        return $stmt->fetchAll();
+    }
+
     public static function updateOwned(int $id, int $userId, ?string $filename, ?string $caption): bool
     {
         $pdo = Database::connect();
