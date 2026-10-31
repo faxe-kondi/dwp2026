@@ -2,6 +2,36 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
+  // ---------- expandable post captions and comments ----------
+  function setupTextToggle(text, toggle, collapsedClass) {
+    text.classList.add(collapsedClass);
+    if (text.scrollHeight <= text.clientHeight + 1) {
+      text.classList.remove(collapsedClass);
+      return;
+    }
+
+    toggle.hidden = false;
+    toggle.addEventListener('click', function () {
+      var expanded = toggle.getAttribute('aria-expanded') === 'true';
+      text.classList.toggle(collapsedClass, expanded);
+      toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+      toggle.textContent = expanded ? 'Show more' : 'Show less';
+    });
+  }
+
+  var caption = document.getElementById('postCaption');
+  var captionToggle = document.querySelector('.caption-toggle[aria-controls="postCaption"]');
+  if (caption && captionToggle) {
+    setupTextToggle(caption, captionToggle, 'is-collapsed');
+  }
+
+  document.querySelectorAll('.comment-text').forEach(function (comment) {
+    var toggle = document.querySelector('[aria-controls="' + comment.id + '"].comment-toggle');
+    if (toggle) {
+      setupTextToggle(comment, toggle, 'is-collapsed');
+    }
+  });
+
   // ---------- scroll-in reveal ----------
   var revealEls = document.querySelectorAll('.reveal');
   if (revealEls.length) {

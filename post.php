@@ -5,10 +5,19 @@ require_once __DIR__ . '/includes/Csrf.php';
 require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/Post.php';
+require_once __DIR__ . '/includes/Comment.php';
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 1;
 $currentUser = Auth::user();
 $realRow = Post::findById($id, $currentUser ? (int) $currentUser['id'] : null);
+$errors = [];
+$commentText = '';
+$editingCommentId = null;
+
+$requestedEditCommentId = filter_var($_GET['edit_comment'] ?? null, FILTER_VALIDATE_INT);
+if ($requestedEditCommentId !== false && $requestedEditCommentId !== null && $requestedEditCommentId > 0) {
+    $editingCommentId = $requestedEditCommentId;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     Csrf::verifyOrFail();
@@ -42,6 +51,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'comment') {
+    Auth::requireLogin();
+    Csrf::verifyOrFail();
+
+    if (!$realRow) {
+        http_response_code(404);
+        exit('Post not found.');
+    }
+
+    $submittedComment = $_POST['content'] ?? '';
+    if (!is_string($submittedComment)) {
+        $errors[] = 'Enter a valid comment.';
+    } else {
+        $commentText = trim($submittedComment);
+        try {
+            Comment::create((int) $realRow['id'], (int) Auth::user()['id'], $commentText);
+            header('Location: post.php?id=' . (int) $realRow['id'] . '&comment=added#comments');
+            exit;
+        } catch (InvalidArgumentException $e) {
+            $errors[] = $e->getMessage();
+        } catch (PDOException $e) {
+            error_log('Comment creation failed: ' . $e->getMessage());
+            $errors[] = 'Something went wrong posting your comment. Please try again.';
+        }
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit_comment') {
+    Auth::requireLogin();
+    Csrf::verifyOrFail();
+
+    if (!$realRow) {
+        http_response_code(404);
+        exit('Post not found.');
+    }
+
+    $commentId = filter_var($_POST['comment_id'] ?? null, FILTER_VALIDATE_INT);
+    if ($commentId === false || $commentId === null || $commentId < 1) {
+        http_response_code(404);
+        exit('Comment not found.');
+    }
+
+    $editingCommentId = $commentId;
+    $submittedComment = $_POST['content'] ?? '';
+    if (!is_string($submittedComment)) {
+        $errors[] = 'Enter a valid comment.';
+    } else {
+        $commentText = trim($submittedComment);
+        try {
+            if (!Comment::updateOwned(
+                $commentId,
+                (int) $realRow['id'],
+                (int) Auth::user()['id'],
+                $commentText
+            )) {
+                http_response_code(404);
+                exit('Comment not found.');
+            }
+            header('Location: post.php?id=' . (int) $realRow['id'] . '&comment=updated#comments');
+            exit;
+        } catch (InvalidArgumentException $e) {
+            $errors[] = $e->getMessage();
+        } catch (PDOException $e) {
+            error_log('Comment update failed: ' . $e->getMessage());
+            $errors[] = 'Something went wrong updating your comment. Please try again.';
+        }
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_comment') {
+    Auth::requireLogin();
+    Csrf::verifyOrFail();
+
+    if (!$realRow) {
+        http_response_code(404);
+        exit('Post not found.');
+    }
+
+    $commentId = filter_var($_POST['comment_id'] ?? null, FILTER_VALIDATE_INT);
+    if ($commentId === false || $commentId === null || $commentId < 1) {
+        http_response_code(404);
+        exit('Comment not found.');
+    }
+
+    try {
+        if (!Comment::deleteOwned($commentId, (int) $realRow['id'], (int) Auth::user()['id'])) {
+            http_response_code(404);
+            exit('Comment not found.');
+        }
+    } catch (PDOException $e) {
+        error_log('Comment deletion failed: ' . $e->getMessage());
+        http_response_code(500);
+        exit('Something went wrong deleting your comment. Please try again.');
+    }
+
+    header('Location: post.php?id=' . (int) $realRow['id'] . '&comment=deleted#comments');
+    exit;
+}
+
 if ($realRow) {
     $post = ds_post_view($realRow);
 } else {
@@ -56,9 +164,33 @@ $isOwner = !empty($post['is_real'])
     && $currentUser
     && (int) $realRow['user_id'] === (int) $currentUser['id'];
 
-$post_comments = !empty($post['is_real'])
-    ? []
-    : array_values(array_filter($demo_comments, fn($c) => $c['post_id'] === $post['id']));
+if (!empty($post['is_real'])) {
+    $post_comments = array_map(
+        static function (array $comment): array {
+            return [
+                'id' => (int) $comment['id'],
+                'username' => $comment['username'],
+                'user_id' => (int) $comment['user_id'],
+                'avatar_url' => ds_user_avatar_url([
+                    'username' => $comment['username'],
+                    'avatar' => $comment['avatar'],
+                ], 38),
+                'time' => ds_time_ago($comment['created_at']),
+                'content' => $comment['content'],
+                'text' => $comment['content'],
+            ];
+        },
+        Comment::findByPost((int) $post['id'])
+    );
+} else {
+    $post_comments = array_map(
+        static function (array $comment): array {
+            $comment['avatar_url'] = ds_avatar_url($comment['avatar_seed'], 38);
+            return $comment;
+        },
+        array_values(array_filter($demo_comments, fn($comment) => $comment['post_id'] === $post['id']))
+    );
+}
 
 $active = '';
 $page_title = '@' . $post['username'] . "'s post";
@@ -108,7 +240,8 @@ include __DIR__ . '/includes/header.php';
         </div>
       </div>
 
-      <p class="post-caption"><?= htmlspecialchars($post['caption']); ?></p>
+      <p class="post-caption" id="postCaption"><?= htmlspecialchars($post['caption']); ?></p>
+      <button class="caption-toggle" type="button" aria-controls="postCaption" aria-expanded="false" hidden>Show more</button>
 
       <?php if (!empty($post['tags'])): ?>
         <div class="post-tags">
@@ -149,28 +282,88 @@ include __DIR__ . '/includes/header.php';
       </div>
 
       <div class="comment-thread">
-        <h3>Comments</h3>
+        <h3 id="comments">Comments</h3>
 
-        <?php if (empty($post_comments)): ?>
-          <p style="color:var(--steel); font-size:14px;">No comments yet on this post &mdash; be the first.</p>
-        <?php else: ?>
-          <?php foreach ($post_comments as $c): ?>
-            <div class="thread-item">
-              <img src="<?= ds_avatar_url($c['avatar_seed'], 38); ?>" alt="<?= htmlspecialchars($c['username']); ?>">
-              <div>
-                <span class="who">@<?= htmlspecialchars($c['username']); ?></span><time><?= $c['time']; ?></time>
-                <button class="icon-flag icon-flag--inline" data-report-type="comment" data-report-target="@<?= htmlspecialchars($c['username']); ?>'s comment" title="Report comment" aria-label="Report comment">&#128681;</button>
-                <p><?= htmlspecialchars($c['text']); ?></p>
-              </div>
-            </div>
-          <?php endforeach; ?>
+        <?php if ($errors): ?>
+          <div class="form-errors">
+            <ul>
+              <?php foreach ($errors as $error): ?>
+                <li><?= htmlspecialchars($error); ?></li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+        <?php elseif (($_GET['comment'] ?? '') === 'added'): ?>
+          <div class="form-success">Comment posted.</div>
+        <?php elseif (($_GET['comment'] ?? '') === 'deleted'): ?>
+          <div class="form-success">Comment deleted.</div>
+        <?php elseif (($_GET['comment'] ?? '') === 'updated'): ?>
+          <div class="form-success">Comment updated.</div>
         <?php endif; ?>
 
-        <form class="comment-form" data-proto>
-          <input type="text" placeholder="Add a comment...">
-          <button type="submit" class="btn btn-solid">Post</button>
-        </form>
-        <p class="field-hint proto-submit-note" style="margin-top:8px;"></p>
+        <div class="comments-list" role="region" aria-label="Post comments" tabindex="0">
+          <?php if (empty($post_comments)): ?>
+            <p class="comments-empty">No comments yet on this post &mdash; be the first.</p>
+          <?php else: ?>
+            <?php foreach ($post_comments as $commentIndex => $c): ?>
+              <div class="thread-item">
+                <img src="<?= htmlspecialchars($c['avatar_url']); ?>" alt="<?= htmlspecialchars($c['username']); ?>">
+                <div class="thread-item-content">
+                  <span class="who">@<?= htmlspecialchars($c['username']); ?></span><time><?= $c['time']; ?></time>
+                  <button class="icon-flag icon-flag--inline" data-report-type="comment" data-report-target="@<?= htmlspecialchars($c['username']); ?>'s comment" title="Report comment" aria-label="Report comment">&#128681;</button>
+                  <?php if (
+                      !empty($post['is_real'])
+                      && Auth::check()
+                      && (int) $c['user_id'] === (int) Auth::user()['id']
+                      && $editingCommentId === (int) $c['id']
+                  ): ?>
+                    <form class="comment-edit-form" method="post" action="post.php?id=<?= $post['id']; ?>#comments">
+                      <?= Csrf::field(); ?>
+                      <input type="hidden" name="action" value="edit_comment">
+                      <input type="hidden" name="comment_id" value="<?= (int) $c['id']; ?>">
+                      <label class="sr-only" for="editComment<?= $commentIndex; ?>">Edit your comment</label>
+                      <textarea id="editComment<?= $commentIndex; ?>" name="content" rows="3" maxlength="500" required><?= htmlspecialchars($commentText !== '' || $errors ? $commentText : $c['content']); ?></textarea>
+                      <div class="comment-edit-actions">
+                        <button class="btn btn-solid" type="submit">Save</button>
+                        <a class="btn" href="post.php?id=<?= $post['id']; ?>#comments">Cancel</a>
+                      </div>
+                    </form>
+                  <?php else: ?>
+                    <p class="comment-text" id="commentText<?= $commentIndex; ?>"><?= htmlspecialchars($c['text']); ?></p>
+                    <button class="comment-toggle" type="button" aria-controls="commentText<?= $commentIndex; ?>" aria-expanded="false" hidden>Show more</button>
+                  <?php endif; ?>
+                  <?php if (!empty($post['is_real']) && Auth::check() && (int) $c['user_id'] === (int) Auth::user()['id']): ?>
+                    <?php if ($editingCommentId !== (int) $c['id']): ?>
+                      <div class="comment-actions">
+                        <a class="comment-action" href="post.php?id=<?= $post['id']; ?>&amp;edit_comment=<?= (int) $c['id']; ?>#comments">Edit</a>
+                        <form class="comment-delete-form" method="post" action="post.php?id=<?= $post['id']; ?>#comments" onsubmit="return confirm('Delete your comment?');">
+                          <?= Csrf::field(); ?>
+                          <input type="hidden" name="action" value="delete_comment">
+                          <input type="hidden" name="comment_id" value="<?= (int) $c['id']; ?>">
+                          <button class="comment-action comment-delete" type="submit">Delete</button>
+                        </form>
+                      </div>
+                    <?php endif; ?>
+                  <?php endif; ?>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </div>
+
+        <?php if (!empty($post['is_real']) && Auth::check()): ?>
+          <form class="comment-form" method="post" action="post.php?id=<?= $post['id']; ?>#comments">
+            <?= Csrf::field(); ?>
+            <input type="hidden" name="action" value="comment">
+            <label class="sr-only" for="commentContent">Add a comment</label>
+            <textarea id="commentContent" name="content" rows="3" maxlength="500" required placeholder="Add a comment..."><?= htmlspecialchars($commentText); ?></textarea>
+            <button type="submit" class="btn btn-solid">Post</button>
+          </form>
+          <p class="field-hint" style="margin-top:8px;">Up to 500 characters.</p>
+        <?php elseif (!empty($post['is_real'])): ?>
+          <p class="field-hint"><a href="login.php">Log in</a> to leave a comment.</p>
+        <?php else: ?>
+          <p class="field-hint">Comments can be added to live posts.</p>
+        <?php endif; ?>
       </div>
     </div>
 

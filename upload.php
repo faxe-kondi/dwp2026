@@ -77,8 +77,8 @@ include __DIR__ . '/includes/header.php';
       <div class="upload-fields">
         <div class="field">
           <label for="caption">Caption</label>
-          <textarea id="caption" name="caption" rows="6" maxlength="1000" placeholder="Tell the story behind the fit..."><?= htmlspecialchars($caption); ?></textarea>
-          <p class="field-hint">Up to 1000 characters. Optional.</p>
+          <textarea id="caption" name="caption" rows="6" maxlength="750" placeholder="Tell the story behind the fit..."><?= htmlspecialchars($caption); ?></textarea>
+          <p class="field-hint">Up to 750 characters. Optional.</p>
         </div>
 
         <button type="submit" class="btn btn-solid" style="width:100%; justify-content:center; padding:16px;">Drop it</button>

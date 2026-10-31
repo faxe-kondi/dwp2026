@@ -6,8 +6,8 @@ class PostService
 {
     private static function validateCaption(string $caption): void
     {
-        if (strlen($caption) > 1000) {
-            throw new InvalidArgumentException('Caption must be 1000 characters or fewer.');
+        if (mb_strlen($caption, 'UTF-8') > 750) {
+            throw new InvalidArgumentException('Caption must be 750 characters or fewer.');
         }
     }
 

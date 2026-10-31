@@ -397,21 +397,47 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .uploader-card .btn { margin-left: auto; padding: 9px 16px; font-size: 13px; }
 
 .post-caption { font-size: 16px; margin-bottom: 16px; }
+.post-caption.is-collapsed { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.caption-toggle,
+.comment-toggle { display: block; padding: 0; border: 0; background: none; color: var(--steel); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.caption-toggle { margin: -8px 0 18px; }
+.caption-toggle[hidden],
+.comment-toggle[hidden] { display: none; }
+.caption-toggle:hover { color: var(--hazard); }
+.caption-toggle:focus-visible { outline: 2px solid var(--hazard); outline-offset: 3px; }
+.comment-toggle:hover { color: var(--hazard); }
+.comment-toggle:focus-visible { outline: 2px solid var(--hazard); outline-offset: 3px; }
 .post-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
 .chip { font-family: 'IBM Plex Mono', monospace; font-size: 12px; border: 1px solid var(--ink); padding: 5px 10px; }
 .post-stats-row { display: flex; gap: 22px; padding: 18px 0; border-top: 1px solid #DEDACD; border-bottom: 1px solid #DEDACD; margin-bottom: 26px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--steel); }
 .post-stats-row .like-btn { font-size: 13px; }
 
 .comment-thread h3 { font-size: 15px; margin-bottom: 16px; font-family: 'Work Sans', sans-serif; text-transform: none; font-weight: 700; }
-.thread-item { display: grid; grid-template-columns: 38px 1fr; gap: 12px; margin-bottom: 18px; }
+.comments-list { max-height: min(260px, 35vh); overflow-y: auto; overscroll-behavior: contain; padding-right: 10px; scrollbar-gutter: stable; }
+.comments-list:focus-visible { outline: 2px solid var(--hazard); outline-offset: 3px; }
+.comments-empty { color: var(--steel); font-size: 14px; }
+.thread-item { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 12px; margin-bottom: 18px; }
 .thread-item img { width: 38px; height: 38px; border-radius: 50%; }
+.thread-item-content { min-width: 0; }
 .thread-item .who { font-weight: 700; font-size: 13.5px; }
 .thread-item time { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--steel); margin-left: 8px; }
-.thread-item p { font-size: 14px; color: #3A3A38; margin-top: 2px; }
+.thread-item p { font-size: 14px; color: #3A3A38; margin-top: 2px; overflow-wrap: anywhere; }
+.thread-item .comment-text.is-collapsed { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.comment-actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.comment-delete-form { margin: 0; }
+.comment-action { padding: 0; border: 0; background: none; color: var(--steel); font: inherit; font-size: 12px; cursor: pointer; }
+.comment-action:hover { color: var(--hazard); }
+.comment-action:focus-visible { outline: 2px solid var(--hazard); outline-offset: 3px; }
+.comment-edit-form { margin-top: 8px; }
+.comment-edit-form textarea { width: 100%; min-width: 0; border: 2px solid var(--ink); padding: 10px 12px; font-family: 'Work Sans', sans-serif; font-size: 14px; background: var(--bone); resize: vertical; }
+.comment-edit-form textarea:focus { outline: none; border-color: var(--hazard); }
+.comment-edit-actions { display: flex; gap: 10px; margin-top: 8px; }
+.comment-edit-actions .btn { padding: 7px 12px; font-size: 12px; }
 
-.comment-form { display: flex; gap: 10px; margin-top: 26px; }
-.comment-form input { flex: 1; border: 2px solid var(--ink); padding: 12px 14px; font-family: 'Work Sans', sans-serif; font-size: 14px; background: var(--bone); }
-.comment-form input:focus { outline: none; border-color: var(--hazard); }
+.comment-form { display: flex; gap: 10px; margin-top: 26px; align-items: flex-start; }
+.comment-form textarea { flex: 1; min-width: 0; border: 2px solid var(--ink); padding: 12px 14px; font-family: 'Work Sans', sans-serif; font-size: 14px; background: var(--bone); resize: vertical; }
+.comment-form textarea:focus { outline: none; border-color: var(--hazard); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 /* ---------- profile page ---------- */
 .profile-header { display: flex; align-items: center; gap: 24px; padding: 0 4px 34px; flex-wrap: wrap; }

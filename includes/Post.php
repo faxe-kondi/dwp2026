@@ -20,6 +20,7 @@ class Post
                     posts.front_pinned_at, posts.profile_pinned_at,
                     users.username, users.avatar,
                     (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likes,
+                    (SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) AS comment_count,
                     EXISTS (
                         SELECT 1 FROM likes
                         WHERE likes.post_id = posts.id AND likes.user_id = ?
@@ -42,6 +43,7 @@ class Post
                     posts.front_pinned_at, posts.profile_pinned_at,
                     users.username, users.avatar,
                     (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likes,
+                    (SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) AS comment_count,
                     0 AS liked_by_viewer
              FROM posts
              JOIN users ON users.id = posts.user_id
@@ -60,6 +62,7 @@ class Post
                     posts.front_pinned_at, posts.profile_pinned_at,
                     users.username, users.avatar,
                     (SELECT COUNT(*) FROM likes AS all_likes WHERE all_likes.post_id = posts.id) AS likes,
+                    (SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) AS comment_count,
                     1 AS liked_by_viewer
              FROM likes
              JOIN posts ON posts.id = likes.post_id
@@ -164,6 +167,7 @@ class Post
                     users.username, users.avatar,
                     ' . ($includeHotLikes ? 'recent_likes.hot_likes' : '0') . ' AS hot_likes,
                     (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likes,
+                    (SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) AS comment_count,
                     EXISTS (
                         SELECT 1 FROM likes
                         WHERE likes.post_id = posts.id AND likes.user_id = ?
