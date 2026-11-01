@@ -66,6 +66,15 @@ CREATE TABLE follows (
     FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE blocks (
+    blocker_id      INT      NOT NULL,
+    blocked_id      INT      NOT NULL,
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (blocker_id, blocked_id),
+    FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE site_settings (
     setting_key     VARCHAR(50) NOT NULL PRIMARY KEY,
     setting_value   TEXT        NOT NULL

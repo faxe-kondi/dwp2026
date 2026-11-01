@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/includes/profile-bootstrap.php';
-$blocked_users = [];
+$blocked_users = User::findBlocked((int) $viewer['id']);
 
 $active = 'profile';
 $page_title = 'Blocked Users';

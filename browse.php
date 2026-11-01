@@ -24,11 +24,11 @@ $randomSeed = $requestedSeed !== false
 if ($sort !== 'random') {
     $randomSeed = 1;
 }
-$totalPosts = Post::countAll();
-$totalPages = max(1, (int) ceil($totalPosts / $postsPerPage));
-$page = min($page, $totalPages);
 $currentUser = Auth::user();
 $viewerId = $currentUser ? (int) $currentUser['id'] : null;
+$totalPosts = Post::countAll($viewerId);
+$totalPages = max(1, (int) ceil($totalPosts / $postsPerPage));
+$page = min($page, $totalPages);
 $posts = array_map(
     'ds_post_view',
     Post::findBrowsePage($postsPerPage, ($page - 1) * $postsPerPage, $viewerId, $sort, $randomSeed)

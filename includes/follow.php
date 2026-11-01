@@ -53,7 +53,11 @@ try {
     echo json_encode(['following' => $result]);
 } catch (DomainException $e) {
     http_response_code(403);
-    echo json_encode(['error' => 'cannot_follow_self']);
+    echo json_encode([
+        'error' => $e->getMessage() === 'You cannot follow yourself.'
+            ? 'cannot_follow_self'
+            : 'blocked_relation',
+    ]);
 } catch (PDOException $e) {
     error_log('User follow update failed: ' . $e->getMessage());
     http_response_code(500);

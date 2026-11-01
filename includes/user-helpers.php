@@ -29,7 +29,7 @@ function ds_user_card($u, $index = 0, $context = 'following') {
     ? ds_user_avatar_url($u, 140)
     : ds_avatar_url($u['avatar_seed'], 140);
   ?>
-  <article class="user-card reveal"<?= $context === 'following' ? ' data-following-card' : ''; ?>>
+  <article class="user-card reveal"<?= $context === 'following' ? ' data-following-card' : ($context === 'blocked' ? ' data-blocked-card' : ''); ?>>
     <div class="user-card-inner">
       <a href="profile.php?id=<?= (int) ($u['id'] ?? 0); ?>" class="user-card-avatar">
         <img src="<?= htmlspecialchars($avatar); ?>" alt="<?= htmlspecialchars($u['username']); ?>">
@@ -42,10 +42,17 @@ function ds_user_card($u, $index = 0, $context = 'following') {
       </div>
 
       <?php if ($context === 'blocked'): ?>
-        <?php if (!empty($u['blocked_reason'])): ?>
-          <p class="user-card-blocked-reason">Blocked &mdash; <?= htmlspecialchars($u['blocked_reason']); ?></p>
-        <?php endif; ?>
-        <button type="button" class="btn unblock-btn" data-unblock-target="<?= htmlspecialchars($u['username']); ?>" data-unblock-label="@<?= htmlspecialchars($u['username']); ?>" style="width:100%; justify-content:center; padding:10px;">Unblock</button>
+        <button
+          type="button"
+          class="btn unblock-btn"
+          data-block-url="includes/block.php"
+          data-user-id="<?= (int) ($u['id'] ?? 0); ?>"
+          data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
+          data-blocked="true"
+          data-block-label="@<?= htmlspecialchars($u['username']); ?>"
+          data-unblock-label="@<?= htmlspecialchars($u['username']); ?>"
+          style="width:100%; justify-content:center; padding:10px;"
+        >Unblock</button>
       <?php else: ?>
         <button
           type="button"
@@ -56,6 +63,7 @@ function ds_user_card($u, $index = 0, $context = 'following') {
           data-following="true"
           data-following-label="Following"
           data-follow-label="+ Follow"
+          data-following-hover-label="Unfollow"
           aria-pressed="true"
           style="width:100%; justify-content:center; padding:10px;"
         >Following</button>

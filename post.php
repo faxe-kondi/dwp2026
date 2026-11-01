@@ -11,6 +11,33 @@ require_once __DIR__ . '/includes/User.php';
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 1;
 $currentUser = Auth::user();
 $realRow = Post::findById($id, $currentUser ? (int) $currentUser['id'] : null);
+$blockedPostState = $realRow && $currentUser
+    ? User::getBlockState((int) $currentUser['id'], (int) $realRow['user_id'])
+    : ['blocked_by_viewer' => false, 'blocked_viewer' => false];
+$postBlockedForViewer = $blockedPostState['blocked_by_viewer'] || $blockedPostState['blocked_viewer'];
+if (
+    $blockedPostState['blocked_viewer']
+    || ($blockedPostState['blocked_by_viewer'] && $_SERVER['REQUEST_METHOD'] === 'POST')
+) {
+    http_response_code(404);
+    $active = '';
+    $page_title = 'Post unavailable';
+    include __DIR__ . '/includes/header.php';
+    ?>
+    <section class="page-body blocked-post-page">
+      <div class="wrap">
+        <div class="blocked-post-notice" role="status">
+          <h1>Post unavailable</h1>
+          <p>This post is unavailable.</p>
+          <a class="btn btn-solid" href="index.php">Return to home</a>
+        </div>
+      </div>
+    </section>
+    <?php
+    include __DIR__ . '/includes/footer.php';
+    exit;
+}
+
 $errors = [];
 $commentText = '';
 $editingCommentId = null;
@@ -167,10 +194,11 @@ $isOwner = !empty($post['is_real'])
 $isFollowingPoster = !empty($post['is_real'])
     && $currentUser
     && !$isOwner
+    && !$postBlockedForViewer
     && User::isFollowing((int) $currentUser['id'], (int) $realRow['user_id']);
 
 if (!empty($post['is_real'])) {
-    $post_comments = array_map(
+    $post_comments = $blockedPostState['blocked_by_viewer'] ? [] : array_map(
         static function (array $comment): array {
             return [
                 'id' => (int) $comment['id'],
@@ -215,6 +243,22 @@ include __DIR__ . '/includes/header.php';
 <section class="page-body">
   <div class="wrap post-layout">
 
+    <?php if ($blockedPostState['blocked_by_viewer']): ?>
+      <div class="blocked-post-notice profile-blocked-state" role="status">
+        <h1>User blocked</h1>
+        <p>Posts from this user will no longer be shown on your feed.</p>
+        <p><a class="btn btn-solid" href="blocked.php">Manage blocked users</a></p>
+        <button
+          type="button"
+          class="btn unblock-btn"
+          data-block-url="includes/block.php"
+          data-user-id="<?= (int) $realRow['user_id']; ?>"
+          data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
+          data-blocked="true"
+          data-unblock-label="@<?= htmlspecialchars($post['username']); ?>"
+        >Unblock user</button>
+      </div>
+    <?php else: ?>
     <div class="post-image">
       <img src="<?= htmlspecialchars(ds_post_image_url($post, 900, 1125)); ?>" alt="<?= htmlspecialchars($post['caption']); ?>">
     </div>
@@ -254,7 +298,9 @@ include __DIR__ . '/includes/header.php';
               </form>
             <?php else: ?>
               <button type="button" class="action-menu-item" data-report-type="user" data-report-target="@<?= htmlspecialchars($post['username']); ?>">Report user</button>
-              <button type="button" class="action-menu-item action-menu-item--danger" data-block-target="<?= htmlspecialchars($post['username']); ?>" data-block-label="@<?= htmlspecialchars($post['username']); ?>">Block user</button>
+              <?php if (!empty($post['is_real']) && $currentUser): ?>
+                <button type="button" class="action-menu-item action-menu-item--danger" data-block-url="includes/block.php" data-user-id="<?= (int) $realRow['user_id']; ?>" data-post-id="<?= (int) $post['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="false" data-block-label="@<?= htmlspecialchars($post['username']); ?>">Block user</button>
+              <?php endif; ?>
             <?php endif; ?>
           </div>
         </div>
@@ -386,6 +432,7 @@ include __DIR__ . '/includes/header.php';
         <?php endif; ?>
       </div>
     </div>
+    <?php endif; ?>
 
   </div>
 </section>
