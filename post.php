@@ -6,6 +6,7 @@ require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/Post.php';
 require_once __DIR__ . '/includes/Comment.php';
+require_once __DIR__ . '/includes/User.php';
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 1;
 $currentUser = Auth::user();
@@ -163,6 +164,10 @@ if ($realRow) {
 $isOwner = !empty($post['is_real'])
     && $currentUser
     && (int) $realRow['user_id'] === (int) $currentUser['id'];
+$isFollowingPoster = !empty($post['is_real'])
+    && $currentUser
+    && !$isOwner
+    && User::isFollowing((int) $currentUser['id'], (int) $realRow['user_id']);
 
 if (!empty($post['is_real'])) {
     $post_comments = array_map(
@@ -216,11 +221,27 @@ include __DIR__ . '/includes/header.php';
 
     <div class="post-details">
       <div class="uploader-card">
-        <img src="<?= htmlspecialchars(ds_post_avatar_url($post, 104)); ?>" alt="<?= htmlspecialchars($post['username']); ?>">
-        <div>
-          <div class="name"><?= htmlspecialchars($post['username']); ?></div>
-        </div>
-        <a href="<?= !empty($post['is_real']) ? 'profile.php?id=' . (int) $post['user_id'] : 'profile.php'; ?>" class="btn"><?= $isOwner ? 'My profile' : 'View profile'; ?></a>
+        <a class="uploader-profile" href="<?= !empty($post['is_real']) ? 'profile.php?id=' . (int) $post['user_id'] : 'profile.php'; ?>">
+          <img src="<?= htmlspecialchars(ds_post_avatar_url($post, 104)); ?>" alt="">
+          <span class="name"><?= htmlspecialchars($post['username']); ?></span>
+        </a>
+        <?php if (!empty($post['is_real']) && !$isOwner): ?>
+          <?php if ($currentUser): ?>
+            <button
+              type="button"
+              class="btn follow-btn<?= $isFollowingPoster ? ' following' : ''; ?>"
+              data-follow-url="includes/follow.php"
+              data-user-id="<?= (int) $realRow['user_id']; ?>"
+              data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
+              data-following="<?= $isFollowingPoster ? 'true' : 'false'; ?>"
+              data-following-label="Following"
+              data-follow-label="+ Follow"
+              aria-pressed="<?= $isFollowingPoster ? 'true' : 'false'; ?>"
+            ><?= $isFollowingPoster ? 'Following' : '+ Follow'; ?></button>
+          <?php else: ?>
+            <a class="btn" href="login.php">Log in to follow</a>
+          <?php endif; ?>
+        <?php endif; ?>
         <div class="action-menu">
           <button class="action-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="uploaderMenu" aria-label="<?= $isOwner ? 'Post options' : 'More options for @' . htmlspecialchars($post['username']); ?>">&#8942;</button>
           <div class="action-menu-list" id="uploaderMenu">

@@ -121,15 +121,60 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // ---------- follow button (visual only) ----------
+  // ---------- follow button ----------
   document.querySelectorAll('.follow-btn').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
-      var following = btn.classList.toggle('following');
-      var label = following ? btn.getAttribute('data-following-label') : btn.getAttribute('data-follow-label');
-      if (label) {
-        btn.textContent = label;
+      if (btn.disabled) return;
+
+      if (!btn.hasAttribute('data-follow-url')) {
+        var visualFollowing = btn.classList.toggle('following');
+        var visualLabel = visualFollowing
+          ? btn.getAttribute('data-following-label')
+          : btn.getAttribute('data-follow-label');
+        if (visualLabel) {
+          btn.textContent = visualLabel;
+        }
+        return;
       }
+
+      var following = btn.getAttribute('data-following') !== 'true';
+      var body = new URLSearchParams();
+      body.set('user_id', btn.getAttribute('data-user-id'));
+      body.set('csrf_token', btn.getAttribute('data-csrf-token'));
+      body.set('following', following ? '1' : '0');
+      btn.disabled = true;
+
+      fetch(btn.getAttribute('data-follow-url'), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+        body: body.toString()
+      }).then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok) {
+            var messages = {
+              login_required: 'Log in to follow users.',
+              cannot_follow_self: 'You cannot follow yourself.',
+              user_not_found: 'This user is no longer available.',
+              invalid_request: 'Your session expired. Refresh the page and try again.'
+            };
+            throw new Error(messages[data.error] || 'Could not update your follow. Please try again.');
+          }
+          return data;
+        });
+      }).then(function (data) {
+        btn.classList.toggle('following', data.following);
+        btn.setAttribute('data-following', data.following ? 'true' : 'false');
+        btn.setAttribute('aria-pressed', data.following ? 'true' : 'false');
+        btn.textContent = data.following
+          ? btn.getAttribute('data-following-label')
+          : btn.getAttribute('data-follow-label');
+      }).catch(function (error) {
+        showToast(error.message);
+      }).then(function () {
+        btn.disabled = false;
+      });
     });
   });
 
