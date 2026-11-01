@@ -22,6 +22,22 @@ class User
         return (bool) $stmt->fetchColumn();
     }
 
+    public static function findFollowing(int $followerId): array
+    {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare(
+            'SELECT users.id, users.username, users.bio, users.avatar,
+                    (SELECT COUNT(*) FROM posts WHERE posts.user_id = users.id) AS posts,
+                    (SELECT COUNT(*) FROM follows AS followers WHERE followers.following_id = users.id) AS followers
+             FROM follows
+             JOIN users ON users.id = follows.following_id
+             WHERE follows.follower_id = ?
+             ORDER BY follows.created_at DESC, users.username ASC'
+        );
+        $stmt->execute([$followerId]);
+        return $stmt->fetchAll();
+    }
+
     public static function setFollowing(int $followerId, int $followingId, bool $following): ?bool
     {
         if ($followerId === $followingId) {

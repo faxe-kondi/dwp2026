@@ -25,23 +25,14 @@ function ds_profile_view(array $user, int $postCount): array {
 }
 
 function ds_user_card($u, $index = 0, $context = 'following') {
-  $avatar = ds_avatar_url($u['avatar_seed'], 140);
-  $menuId = 'menu-' . preg_replace('/[^a-z0-9]+/i', '-', $u['username']) . '-' . $index;
+  $avatar = isset($u['avatar'])
+    ? ds_user_avatar_url($u, 140)
+    : ds_avatar_url($u['avatar_seed'], 140);
   ?>
-  <article class="user-card reveal">
+  <article class="user-card reveal"<?= $context === 'following' ? ' data-following-card' : ''; ?>>
     <div class="user-card-inner">
-      <?php if ($context === 'following'): ?>
-        <div class="action-menu">
-          <button class="action-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="<?= $menuId; ?>" aria-label="More options for @<?= htmlspecialchars($u['username']); ?>">&#8942;</button>
-          <div class="action-menu-list" id="<?= $menuId; ?>">
-            <button type="button" class="action-menu-item" data-report-type="user" data-report-target="@<?= htmlspecialchars($u['username']); ?>">Report user</button>
-            <button type="button" class="action-menu-item action-menu-item--danger" data-block-target="<?= htmlspecialchars($u['username']); ?>" data-block-label="@<?= htmlspecialchars($u['username']); ?>">Block user</button>
-          </div>
-        </div>
-      <?php endif; ?>
-
       <a href="profile.php?id=<?= (int) ($u['id'] ?? 0); ?>" class="user-card-avatar">
-        <img src="<?= $avatar; ?>" alt="<?= htmlspecialchars($u['username']); ?>">
+        <img src="<?= htmlspecialchars($avatar); ?>" alt="<?= htmlspecialchars($u['username']); ?>">
       </a>
       <a href="profile.php?id=<?= (int) ($u['id'] ?? 0); ?>" class="user-card-name">@<?= htmlspecialchars($u['username']); ?></a>
       <p class="user-card-bio"><?= htmlspecialchars($u['bio']); ?></p>
@@ -56,7 +47,18 @@ function ds_user_card($u, $index = 0, $context = 'following') {
         <?php endif; ?>
         <button type="button" class="btn unblock-btn" data-unblock-target="<?= htmlspecialchars($u['username']); ?>" data-unblock-label="@<?= htmlspecialchars($u['username']); ?>" style="width:100%; justify-content:center; padding:10px;">Unblock</button>
       <?php else: ?>
-        <button type="button" class="btn follow-btn following" data-following-label="Following" data-follow-label="+ Follow" style="width:100%; justify-content:center; padding:10px;">Following</button>
+        <button
+          type="button"
+          class="btn follow-btn following"
+          data-follow-url="includes/follow.php"
+          data-user-id="<?= (int) ($u['id'] ?? 0); ?>"
+          data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
+          data-following="true"
+          data-following-label="Following"
+          data-follow-label="+ Follow"
+          aria-pressed="true"
+          style="width:100%; justify-content:center; padding:10px;"
+        >Following</button>
       <?php endif; ?>
     </div>
   </article>

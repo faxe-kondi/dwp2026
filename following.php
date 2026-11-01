@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/includes/profile-bootstrap.php';
-$following_users = [];
+$following_users = User::findFollowing((int) $viewer['id']);
 $active = 'profile';
 $page_title = 'Following';
 include __DIR__ . '/includes/header.php';
