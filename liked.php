@@ -1,9 +1,8 @@
 <?php
 require __DIR__ . '/includes/profile-bootstrap.php';
 
-$liked_posts = array_values(array_filter($demo_posts, fn($p) => in_array($p['id'], $demo_liked_post_ids, true)));
 $real_liked_posts = array_map('ds_post_view', Post::findLikedByUser((int) Auth::user()['id']));
-$liked_posts = array_merge($real_liked_posts, $liked_posts);
+$liked_posts = $real_liked_posts;
 
 $active = 'profile';
 $page_title = 'Your Likes';
