@@ -158,78 +158,15 @@ $demo_comments = [
     ],
 ];
 
-$demo_liked_post_ids = [2, 3, 4, 7];
+$demo_liked_post_ids = [];
 
-// Users the viewer follows — stand-in for a real `follows` table join.
-// Avatar seeds are deliberately reused from $demo_posts above so the
-// same faces show up consistently across the prototype.
-$demo_following = [
-    [
-        'username' => 'og.tenko',
-        'avatar_seed' => 'og.tenko',
-        'bio' => 'First in line, every time. Restock alerts and queue survival tips.',
-        'posts' => 58,
-        'followers' => '3.1K',
-    ],
-    [
-        'username' => 'mona.fits',
-        'avatar_seed' => 'mona.fits',
-        'bio' => 'Layering experiments and workwear thrift finds out of Malmö.',
-        'posts' => 24,
-        'followers' => '1.8K',
-    ],
-    [
-        'username' => 'kudzu',
-        'avatar_seed' => 'kudzu',
-        'bio' => 'Hand-paints everything. Will ruin a perfectly good jacket on purpose.',
-        'posts' => 76,
-        'followers' => '5.6K',
-    ],
-    [
-        'username' => 'perry.does.laundry',
-        'avatar_seed' => 'perry.does.laundry',
-        'bio' => 'Sneaker rotation documentarian. Posts the misses too.',
-        'posts' => 19,
-        'followers' => '940',
-    ],
-    [
-        'username' => 'nb.thrift',
-        'avatar_seed' => 'nb.thrift',
-        'bio' => 'Bin day every Saturday. Three bags in, one keeper out.',
-        'posts' => 41,
-        'followers' => '2.2K',
-    ],
-    [
-        'username' => 'thehemline',
-        'avatar_seed' => 'thehemline',
-        'bio' => 'Alterations and repairs — giving dead pieces a second life.',
-        'posts' => 112,
-        'followers' => '9.7K',
-    ],
-];
+// Kept empty while the app is backed by real user data instead of
+// prototype-only social lists.
+$demo_following = [];
 
-// Users the viewer has blocked — stand-in for a real `blocks` table.
-// Kept as its own list (not just a flag on $demo_following) so a
-// blocked user can be shown and unblocked without ever being deleted
-// outright.
-$demo_blocked_users = [
-    [
-        'username' => 'copycat.customs',
-        'avatar_seed' => 'copycat-customs',
-        'bio' => 'Reposts other people\'s fits without credit.',
-        'posts' => 12,
-        'followers' => '340',
-        'blocked_reason' => 'Reposting without credit',
-    ],
-    [
-        'username' => 'fauxhype',
-        'avatar_seed' => 'fauxhype',
-        'bio' => 'Sells counterfeit pieces as deadstock originals.',
-        'posts' => 5,
-        'followers' => '88',
-        'blocked_reason' => 'Selling counterfeits',
-    ],
-];
+// Kept empty while the app is backed by real user data instead of
+// prototype-only social lists.
+$demo_blocked_users = [];
 
 function ds_avatar_url($seed, $size = 96) {
     return "https://picsum.photos/seed/" . urlencode($seed) . "/{$size}/{$size}";

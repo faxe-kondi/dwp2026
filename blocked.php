@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/includes/profile-bootstrap.php';
+$blocked_users = [];
 
 $active = 'profile';
 $page_title = 'Blocked Users';
@@ -15,11 +16,11 @@ include __DIR__ . '/includes/header.php';
 
     <p class="proto-note" style="margin-top:-18px; margin-bottom:34px;">Blocked users stay here until you unblock them &mdash; blocking never deletes anyone for good.</p>
 
-    <?php if (empty($demo_blocked_users)): ?>
+    <?php if (empty($blocked_users)): ?>
       <div class="empty-state">You haven't blocked anyone.</div>
     <?php else: ?>
       <div class="user-grid">
-        <?php foreach ($demo_blocked_users as $i => $u) ds_user_card($u, $i, 'blocked'); ?>
+        <?php foreach ($blocked_users as $i => $u) ds_user_card($u, $i, 'blocked'); ?>
       </div>
     <?php endif; ?>
 
