@@ -280,7 +280,11 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .photo-meta .who img { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--panel-line); }
 .photo-meta .who span { font-size: 13px; font-weight: 600; color: var(--bone-dim); }
 .photo-meta .caption { font-size: 14px; color: var(--bone-dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.photo-meta .stats { display: flex; gap: 16px; margin-top: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--steel); }
+.photo-meta .stats {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 12px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--steel);
+}
+.photo-meta .stats > * { display: inline-flex; align-items: center; }
 .like-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   min-height: 34px; padding: 6px 11px;
@@ -409,7 +413,12 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .comment-toggle:focus-visible { outline: 2px solid var(--hazard); outline-offset: 3px; }
 .post-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
 .chip { font-family: 'IBM Plex Mono', monospace; font-size: 12px; border: 1px solid var(--ink); padding: 5px 10px; }
-.post-stats-row { display: flex; gap: 22px; padding: 18px 0; border-top: 1px solid #DEDACD; border-bottom: 1px solid #DEDACD; margin-bottom: 26px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--steel); }
+.post-stats-row {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 22px; row-gap: 10px;
+  padding: 18px 0; border-top: 1px solid #DEDACD; border-bottom: 1px solid #DEDACD;
+  margin-bottom: 26px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--steel);
+}
+.post-stats-row > * { display: inline-flex; align-items: center; }
 .post-stats-row .like-btn { font-size: 13px; }
 
 .comment-thread h3 { font-size: 15px; margin-bottom: 16px; font-family: 'Work Sans', sans-serif; text-transform: none; font-weight: 700; }
