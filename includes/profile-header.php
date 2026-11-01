@@ -7,12 +7,13 @@ if (!isset($profile_tab)) { $profile_tab = 'posts'; }
   </div>
   <div class="profile-id">
     <h1><?= htmlspecialchars($profile['display_name']); ?></h1>
-    <div class="handle">@<?= htmlspecialchars($profile['username']); ?></div>
   </div>
-  <div class="profile-actions">
-    <a href="settings.php" class="btn">Edit profile</a>
-    <a href="upload.php" class="btn btn-solid">+ New post</a>
-  </div>
+  <?php if ($isOwnProfile): ?>
+    <div class="profile-actions">
+      <a href="settings.php" class="btn">Edit profile</a>
+      <a href="upload.php" class="btn btn-solid">+ New post</a>
+    </div>
+  <?php endif; ?>
 </div>
 
 <p class="profile-bio">
@@ -33,9 +34,13 @@ if (!isset($profile_tab)) { $profile_tab = 'posts'; }
 </div>
 
 <div class="profile-tabs">
-  <a href="profile.php" class="<?= $profile_tab === 'posts' ? 'active' : ''; ?>">Posts</a>
-  <a href="liked.php" class="<?= $profile_tab === 'likes' ? 'active' : ''; ?>">Likes</a>
-  <a href="following.php" class="<?= $profile_tab === 'following' ? 'active' : ''; ?>">Following</a>
-  <a href="blocked.php" class="<?= $profile_tab === 'blocked' ? 'active' : ''; ?>">Blocked</a>
-  <a href="settings.php" class="<?= $profile_tab === 'settings' ? 'active' : ''; ?>">Settings</a>
+  <?php if ($isOwnProfile): ?>
+    <a href="profile.php" class="<?= $profile_tab === 'posts' ? 'active' : ''; ?>">Posts</a>
+    <a href="liked.php" class="<?= $profile_tab === 'likes' ? 'active' : ''; ?>">Likes</a>
+    <a href="following.php" class="<?= $profile_tab === 'following' ? 'active' : ''; ?>">Following</a>
+    <a href="blocked.php" class="<?= $profile_tab === 'blocked' ? 'active' : ''; ?>">Blocked</a>
+    <a href="settings.php" class="<?= $profile_tab === 'settings' ? 'active' : ''; ?>">Settings</a>
+  <?php else: ?>
+    <a href="profile.php?id=<?= (int) $viewer['id']; ?>" class="active">Posts</a>
+  <?php endif; ?>
 </div>

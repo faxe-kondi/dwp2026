@@ -2,6 +2,7 @@
 require_once __DIR__ . '/Auth.php';
 Auth::boot();
 Auth::requireLogin();
+$isOwnProfile = true;
 
 require_once __DIR__ . '/User.php';
 require_once __DIR__ . '/Post.php';

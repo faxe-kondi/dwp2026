@@ -218,10 +218,9 @@ include __DIR__ . '/includes/header.php';
       <div class="uploader-card">
         <img src="<?= htmlspecialchars(ds_post_avatar_url($post, 104)); ?>" alt="<?= htmlspecialchars($post['username']); ?>">
         <div>
-          <div class="name"><?= htmlspecialchars(ucwords(str_replace(['.', '_'], ' ', $post['username']))); ?></div>
-          <div class="handle">@<?= htmlspecialchars($post['username']); ?> &middot; posted <?= $post['time']; ?></div>
+          <div class="name"><?= htmlspecialchars($post['username']); ?></div>
         </div>
-        <a href="profile.php" class="btn"><?= $isOwner ? 'My profile' : 'View profile'; ?></a>
+        <a href="<?= !empty($post['is_real']) ? 'profile.php?id=' . (int) $post['user_id'] : 'profile.php'; ?>" class="btn"><?= $isOwner ? 'My profile' : 'View profile'; ?></a>
         <div class="action-menu">
           <button class="action-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="uploaderMenu" aria-label="<?= $isOwner ? 'Post options' : 'More options for @' . htmlspecialchars($post['username']); ?>">&#8942;</button>
           <div class="action-menu-list" id="uploaderMenu">

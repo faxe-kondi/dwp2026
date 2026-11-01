@@ -11,7 +11,7 @@ function ds_user_avatar_url(array $user, int $size = 256): string {
 
 function ds_profile_view(array $user, int $postCount): array {
   return [
-    'display_name' => ucwords(str_replace(['.', '_'], ' ', $user['username'])),
+    'display_name' => $user['username'],
     'username'      => $user['username'],
     'avatar_url'    => ds_user_avatar_url($user, 256),
     'bio'           => $user['bio'],
@@ -40,10 +40,10 @@ function ds_user_card($u, $index = 0, $context = 'following') {
         </div>
       <?php endif; ?>
 
-      <a href="profile.php" class="user-card-avatar">
+      <a href="profile.php?id=<?= (int) ($u['id'] ?? 0); ?>" class="user-card-avatar">
         <img src="<?= $avatar; ?>" alt="<?= htmlspecialchars($u['username']); ?>">
       </a>
-      <a href="profile.php" class="user-card-name">@<?= htmlspecialchars($u['username']); ?></a>
+      <a href="profile.php?id=<?= (int) ($u['id'] ?? 0); ?>" class="user-card-name">@<?= htmlspecialchars($u['username']); ?></a>
       <p class="user-card-bio"><?= htmlspecialchars($u['bio']); ?></p>
       <div class="user-card-stats">
         <span><b><?= htmlspecialchars((string) $u['posts']); ?></b> posts</span>
