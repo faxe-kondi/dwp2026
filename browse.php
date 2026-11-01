@@ -9,7 +9,7 @@ $requestedPage = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT);
 $page = $requestedPage !== false && $requestedPage !== null && $requestedPage > 0
     ? $requestedPage
     : 1;
-$sortOptions = ['newest', 'likes', 'random'];
+$sortOptions = ['newest', 'likes', 'comments', 'random'];
 $requestedSort = $_GET['sort'] ?? 'newest';
 $sort = is_string($requestedSort) && in_array($requestedSort, $sortOptions, true)
     ? $requestedSort
@@ -58,6 +58,7 @@ include __DIR__ . '/includes/header.php';
       <select id="browseSort" name="sort">
         <option value="newest"<?= $sort === 'newest' ? ' selected' : ''; ?>>Newest</option>
         <option value="likes"<?= $sort === 'likes' ? ' selected' : ''; ?>>Most liked</option>
+        <option value="comments"<?= $sort === 'comments' ? ' selected' : ''; ?>>Most commented</option>
         <option value="random"<?= $sort === 'random' ? ' selected' : ''; ?>>Random</option>
       </select>
       <button class="btn" type="submit">Apply</button>

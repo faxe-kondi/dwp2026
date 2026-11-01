@@ -115,6 +115,9 @@ class Post
             case 'likes':
                 $orderBy = 'ORDER BY likes DESC, posts.created_at DESC, posts.id DESC';
                 break;
+            case 'comments':
+                $orderBy = 'ORDER BY comment_count DESC, posts.created_at DESC, posts.id DESC';
+                break;
             case 'random':
                 if ($randomSeed < 1 || $randomSeed > 2147483647) {
                     throw new InvalidArgumentException('Random sort seed is out of range.');
