@@ -147,14 +147,18 @@ include __DIR__ . '/includes/header.php';
         <?php elseif ($searchType === 'comments' && $comments): ?>
           <div class="search-comment-list">
             <?php foreach ($comments as $comment): ?>
-              <a class="search-comment-result" href="post.php?id=<?= (int) $comment['post_id']; ?>#comments">
-                <img src="<?= htmlspecialchars(ds_user_avatar_url($comment, 48)); ?>" alt="">
+              <article class="search-comment-result">
+                <a class="search-comment-post-link" href="post.php?id=<?= (int) $comment['post_id']; ?>#comments" aria-label="View comment on <?= htmlspecialchars($comment['title']); ?>"></a>
+                <a class="search-comment-author" href="profile.php?id=<?= (int) $comment['user_id']; ?>">
+                  <img src="<?= htmlspecialchars(ds_user_avatar_url($comment, 48)); ?>" alt="">
+                  <span><?= htmlspecialchars($comment['username']); ?></span>
+                </a>
                 <span class="search-comment-copy">
-                  <span><b>@<?= htmlspecialchars($comment['username']); ?></b> commented on <b><?= htmlspecialchars($comment['title']); ?></b></span>
+                  <span>Commented on <b><?= htmlspecialchars($comment['title']); ?></b></span>
                   <span class="search-comment-text"><?= htmlspecialchars($comment['content']); ?></span>
-                  <span class="search-comment-post-author">Post by @<?= htmlspecialchars($comment['post_username']); ?></span>
+                  <span class="search-comment-post-author">Post by <?= htmlspecialchars($comment['post_username']); ?></span>
                 </span>
-              </a>
+              </article>
             <?php endforeach; ?>
           </div>
         <?php else: ?>

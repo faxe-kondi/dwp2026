@@ -375,9 +375,20 @@ include __DIR__ . '/includes/header.php';
           <?php else: ?>
             <?php foreach ($post_comments as $commentIndex => $c): ?>
               <div class="thread-item">
-                <img src="<?= htmlspecialchars($c['avatar_url']); ?>" alt="<?= htmlspecialchars($c['username']); ?>">
+                <?php if (!empty($c['user_id'])): ?>
+                  <a class="comment-author-avatar" href="profile.php?id=<?= (int) $c['user_id']; ?>" aria-label="View @<?= htmlspecialchars($c['username']); ?>'s profile">
+                    <img src="<?= htmlspecialchars($c['avatar_url']); ?>" alt="">
+                  </a>
+                <?php else: ?>
+                  <img src="<?= htmlspecialchars($c['avatar_url']); ?>" alt="<?= htmlspecialchars($c['username']); ?>">
+                <?php endif; ?>
                 <div class="thread-item-content">
-                  <span class="who">@<?= htmlspecialchars($c['username']); ?></span><time><?= $c['time']; ?></time>
+                  <?php if (!empty($c['user_id'])): ?>
+                    <a class="who comment-author-name" href="profile.php?id=<?= (int) $c['user_id']; ?>">@<?= htmlspecialchars($c['username']); ?></a>
+                  <?php else: ?>
+                    <span class="who">@<?= htmlspecialchars($c['username']); ?></span>
+                  <?php endif; ?>
+                  <time><?= $c['time']; ?></time>
                   <button class="icon-flag icon-flag--inline" data-report-type="comment" data-report-target="@<?= htmlspecialchars($c['username']); ?>'s comment" title="Report comment" aria-label="Report comment">&#128681;</button>
                   <?php if (
                       !empty($post['is_real'])

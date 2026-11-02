@@ -238,9 +238,14 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .search-results-section .section-head h2 { font-size: 30px; }
 .search-empty { padding: 20px 0; color: var(--steel); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
 .search-comment-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 18px; }
-.search-comment-result { display: flex; align-items: center; gap: 11px; min-height: 66px; padding: 10px 12px; border-left: 2px solid #D8D3C4; background: rgba(234, 230, 217, 0.55); transition: border-color 0.15s ease, background 0.15s ease; }
+.search-comment-result { position: relative; display: flex; align-items: center; gap: 11px; min-width: 0; min-height: 66px; padding: 10px 12px; border-left: 2px solid #D8D3C4; background: rgba(234, 230, 217, 0.55); transition: border-color 0.15s ease, background 0.15s ease; }
 .search-comment-result:hover { border-color: var(--hazard); background: #EAE6D9; }
-.search-comment-result > img { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; }
+.search-comment-post-link { position: absolute; z-index: 1; inset: 0; }
+.search-comment-post-link:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
+.search-comment-author { position: relative; z-index: 2; display: flex; flex: 0 0 84px; flex-direction: column; align-items: center; gap: 3px; color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-decoration: none; }
+.search-comment-author img { width: 34px; height: 34px; border-radius: 50%; }
+.search-comment-author:hover { color: var(--hazard); }
+.search-comment-author:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
 .search-comment-copy { display: grid; min-width: 0; gap: 2px; font-size: 13px; }
 .search-comment-copy > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .search-comment-text { display: -webkit-box; overflow: hidden; color: #3A3A38; font-size: 12px; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
@@ -259,6 +264,7 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 }
 @media (max-width: 700px) {
   .search-comment-list { grid-template-columns: 1fr; }
+  .search-comment-author { flex-basis: 68px; }
 }
 .page-head { position: relative; overflow: hidden; background: var(--ink); color: var(--bone); padding: 46px 0; border-bottom: 3px solid var(--hazard); }
 .page-head .crumb { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--steel); margin-bottom: 10px; }
@@ -477,8 +483,13 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .comments-empty { color: var(--steel); font-size: 14px; }
 .thread-item { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 12px; margin-bottom: 18px; }
 .thread-item img { width: 38px; height: 38px; border-radius: 50%; }
+.comment-author-avatar { display: block; width: 38px; height: 38px; border-radius: 50%; }
+.comment-author-avatar:focus-visible,
+.comment-author-name:focus-visible { outline: 2px solid var(--hazard); outline-offset: 3px; }
 .thread-item-content { min-width: 0; }
 .thread-item .who { font-weight: 700; font-size: 13.5px; }
+.thread-item .comment-author-name { color: inherit; text-decoration: none; }
+.thread-item .comment-author-name:hover { color: var(--hazard); }
 .thread-item time { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--steel); margin-left: 8px; }
 .thread-item p { font-size: 14px; color: #3A3A38; margin-top: 2px; overflow-wrap: anywhere; }
 .thread-item .comment-text.is-collapsed { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
