@@ -17,18 +17,23 @@ if (!$row || (int) $row['user_id'] !== $userId) {
 }
 
 $errors = [];
+$title = $row['title'];
 $caption = $row['caption'] ?? '';
 $notice = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     Csrf::verifyOrFail();
-    $caption = trim($_POST['caption'] ?? '');
+    $submittedTitle = $_POST['title'] ?? '';
+    $title = is_string($submittedTitle) ? trim($submittedTitle) : '';
+    $submittedCaption = $_POST['caption'] ?? '';
+    $caption = is_string($submittedCaption) ? trim($submittedCaption) : '';
 
     try {
         $result = PostService::updatePost(
             $id,
             $userId,
             $row['filename'],
+            $title,
             $caption,
             $_FILES['photo'] ?? null
         );
@@ -100,6 +105,11 @@ include __DIR__ . '/includes/header.php';
       </div>
 
       <div class="upload-fields">
+        <div class="field">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" maxlength="150" required value="<?= htmlspecialchars($title); ?>">
+          <p class="field-hint">Up to 150 characters. Required.</p>
+        </div>
         <div class="field">
           <label for="caption">Caption</label>
           <textarea id="caption" name="caption" rows="6" maxlength="750" placeholder="Tell the story behind the fit..."><?= htmlspecialchars($caption); ?></textarea>

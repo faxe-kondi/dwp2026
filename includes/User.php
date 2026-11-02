@@ -12,6 +12,68 @@ class User
         return $row ?: null;
     }
 
+    public static function search(
+        string $query,
+        ?int $viewerId = null,
+        int $limit = 12,
+        int $offset = 0
+    ): array
+    {
+        if ($limit < 1 || $limit > 50 || $offset < 0) {
+            throw new InvalidArgumentException('User search pagination is out of range.');
+        }
+
+        $pdo = Database::connect();
+        $searchTerm = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+        $sql = 'SELECT users.id, users.username, users.bio, users.avatar,
+                       (SELECT COUNT(*) FROM posts WHERE posts.user_id = users.id) AS posts,
+                       (SELECT COUNT(*) FROM follows AS followers WHERE followers.following_id = users.id) AS followers
+                FROM users
+                WHERE users.is_banned = 0 AND users.username LIKE ? ESCAPE \'!\'';
+        $params = [$searchTerm];
+
+        if ($viewerId !== null) {
+            $sql .= '
+                AND NOT EXISTS (
+                    SELECT 1 FROM blocks
+                    WHERE (blocks.blocker_id = ? AND blocks.blocked_id = users.id)
+                       OR (blocks.blocker_id = users.id AND blocks.blocked_id = ?)
+                )';
+            $params[] = $viewerId;
+            $params[] = $viewerId;
+        }
+
+        $sql .= ' ORDER BY users.username ASC LIMIT ' . $limit . ' OFFSET ' . $offset;
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    public static function countSearchResults(string $query, ?int $viewerId = null): int
+    {
+        $pdo = Database::connect();
+        $searchTerm = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+        $sql = 'SELECT COUNT(*)
+                FROM users
+                WHERE users.is_banned = 0 AND users.username LIKE ? ESCAPE \'!\'';
+        $params = [$searchTerm];
+
+        if ($viewerId !== null) {
+            $sql .= '
+                AND NOT EXISTS (
+                    SELECT 1 FROM blocks
+                    WHERE (blocks.blocker_id = ? AND blocks.blocked_id = users.id)
+                       OR (blocks.blocker_id = users.id AND blocks.blocked_id = ?)
+                )';
+            $params[] = $viewerId;
+            $params[] = $viewerId;
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
+
     public static function isFollowing(int $followerId, int $followingId): bool
     {
         $pdo = Database::connect();

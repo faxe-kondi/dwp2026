@@ -19,6 +19,7 @@ function ds_post_view(array $row): array {
     'username'      => $row['username'],
     'avatar_file'   => $row['avatar'] ?? 'default.png',
     'image_file'    => $row['filename'],
+    'title'         => $row['title'] ?? ($row['caption'] ?? ''),
     'caption'       => $row['caption'] ?? '',
     'tags'          => [],
     'likes'         => (int) ($row['likes'] ?? 0),
@@ -60,7 +61,7 @@ function ds_photo_card($p, $liked = false) {
       <a href="post.php?id=<?= $p['id']; ?>" class="frame" style="display:block;">
         <?php if (!empty($p['hot'])): ?><span class="flame-badge">&#128293; HOT</span><?php endif; ?>
         <?php if (!empty($p['pinned'])): ?><span class="pin-badge">&#128204; Pinned</span><?php endif; ?>
-        <img src="<?= htmlspecialchars($img); ?>" alt="<?= htmlspecialchars($p['caption']); ?>" loading="lazy">
+        <img src="<?= htmlspecialchars($img); ?>" alt="<?= htmlspecialchars($p['title']); ?>" loading="lazy">
       </a>
       <div class="photo-meta">
         <a href="<?= !empty($p['is_real']) ? 'profile.php?id=' . (int) $p['user_id'] : 'profile.php'; ?>" class="who">
@@ -68,7 +69,8 @@ function ds_photo_card($p, $liked = false) {
           <span>@<?= htmlspecialchars($p['username']); ?></span>
         </a>
         <a href="post.php?id=<?= $p['id']; ?>" style="color:inherit;">
-          <p class="caption"><?= htmlspecialchars($p['caption']); ?></p>
+          <p class="photo-title"><?= htmlspecialchars($p['title']); ?></p>
+          <?php if ($p['caption'] !== ''): ?><p class="caption"><?= htmlspecialchars($p['caption']); ?></p><?php endif; ?>
         </a>
         <div class="stats">
           <?php if ($isOwnPost): ?>

@@ -112,7 +112,7 @@ include __DIR__ . '/includes/header.php';
               <div class="frame">
                 <img src="<?= htmlspecialchars(ds_post_image_url($p)); ?>" alt="<?= htmlspecialchars($p['caption']); ?>" loading="lazy">
               </div>
-              <p class="cap"><b>@<?= htmlspecialchars($p['username']); ?></b> &mdash; <?= htmlspecialchars(mb_strimwidth($p['caption'], 0, 60, '…')); ?></p>
+              <p class="cap"><b>@<?= htmlspecialchars($p['username']); ?></b> &mdash; <?= htmlspecialchars($p['title']); ?></p>
             </div>
           </a>
         <?php endforeach; ?>

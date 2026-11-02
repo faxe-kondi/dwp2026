@@ -226,7 +226,7 @@ if (!empty($post['is_real'])) {
 }
 
 $active = '';
-$page_title = '@' . $post['username'] . "'s post";
+$page_title = $post['title'] . ' - @' . $post['username'];
 include __DIR__ . '/includes/header.php';
 ?>
 
@@ -260,7 +260,7 @@ include __DIR__ . '/includes/header.php';
       </div>
     <?php else: ?>
     <div class="post-image">
-      <img src="<?= htmlspecialchars(ds_post_image_url($post, 900, 1125)); ?>" alt="<?= htmlspecialchars($post['caption']); ?>">
+      <img src="<?= htmlspecialchars(ds_post_image_url($post, 900, 1125)); ?>" alt="<?= htmlspecialchars($post['title']); ?>">
     </div>
 
     <div class="post-details">
@@ -306,8 +306,11 @@ include __DIR__ . '/includes/header.php';
         </div>
       </div>
 
-      <p class="post-caption" id="postCaption"><?= htmlspecialchars($post['caption']); ?></p>
-      <button class="caption-toggle" type="button" aria-controls="postCaption" aria-expanded="false" hidden>Show more</button>
+      <h2 class="post-title"><?= htmlspecialchars($post['title']); ?></h2>
+      <?php if ($post['caption'] !== ''): ?>
+        <p class="post-caption" id="postCaption"><?= htmlspecialchars($post['caption']); ?></p>
+        <button class="caption-toggle" type="button" aria-controls="postCaption" aria-expanded="false" hidden>Show more</button>
+      <?php endif; ?>
 
       <?php if (!empty($post['tags'])): ?>
         <div class="post-tags">

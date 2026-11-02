@@ -4,6 +4,16 @@ require_once __DIR__ . '/Image.php';
 
 class PostService
 {
+    private static function validateTitle(string $title): void
+    {
+        if ($title === '') {
+            throw new InvalidArgumentException('Enter a title for your post.');
+        }
+        if (mb_strlen($title, 'UTF-8') > 150) {
+            throw new InvalidArgumentException('Title must be 150 characters or fewer.');
+        }
+    }
+
     private static function validateCaption(string $caption): void
     {
         if (mb_strlen($caption, 'UTF-8') > 750) {
@@ -69,15 +79,16 @@ class PostService
         return true;
     }
 
-    public static function createPost(int $userId, string $caption, ?array $upload): int
+    public static function createPost(int $userId, string $title, string $caption, ?array $upload): int
     {
+        self::validateTitle($title);
         self::validateCaption($caption);
         $upload = self::validateUpload($upload, true);
         $stagedPath = null;
 
         try {
             [$filename, $stagedPath] = self::stageImage($upload);
-            return Post::create($userId, $filename, $caption !== '' ? $caption : null);
+            return Post::create($userId, $filename, $title, $caption !== '' ? $caption : null);
         } catch (Throwable $e) {
             self::removeStagedImage($stagedPath, 'post creation');
             throw $e;
@@ -88,9 +99,11 @@ class PostService
         int $postId,
         int $userId,
         string $previousFilename,
+        string $title,
         string $caption,
         ?array $upload
     ): array {
+        self::validateTitle($title);
         self::validateCaption($caption);
         $upload = self::validateUpload($upload, false);
         $newFilename = null;
@@ -101,7 +114,13 @@ class PostService
                 [$newFilename, $stagedPath] = self::stageImage($upload);
             }
 
-            if (!Post::updateOwned($postId, $userId, $newFilename, $caption !== '' ? $caption : null)) {
+            if (!Post::updateOwned(
+                $postId,
+                $userId,
+                $newFilename,
+                $title,
+                $caption !== '' ? $caption : null
+            )) {
                 self::removeStagedImage($stagedPath, 'post editing');
                 return ['updated' => false, 'notice' => ''];
             }

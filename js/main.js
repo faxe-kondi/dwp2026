@@ -1,4 +1,4 @@
-// DEADSTOCK prototype JS — front-end only, no backend calls.
+// DEADSTOCK front-end interactions.
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -56,6 +56,29 @@ document.addEventListener('DOMContentLoaded', function () {
   if (toggle && links) {
     toggle.addEventListener('click', function () {
       links.classList.toggle('open');
+    });
+  }
+
+  var searchInput = document.getElementById('searchQuery');
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      var query = searchInput.value.trim() || '...';
+      var searchTerm = document.querySelector('.search-category-prompt strong');
+      if (searchTerm) searchTerm.textContent = query;
+
+      document.querySelectorAll('[data-search-category]').forEach(function (option) {
+        var url = new URL('search.php', window.location.href);
+        url.searchParams.set('q', searchInput.value.trim());
+        url.searchParams.set('type', option.getAttribute('data-search-category'));
+        option.href = url.toString();
+      });
+
+      var status = document.querySelector('.search-status');
+      if (status) {
+        status.textContent = searchInput.value.trim()
+          ? 'Choose a category to search for "' + searchInput.value.trim() + '".'
+          : 'Enter a search term, then choose a category.';
+      }
     });
   }
 
