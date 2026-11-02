@@ -53,7 +53,7 @@ function ds_user_card($u, $index = 0, $context = 'following') {
           data-unblock-label="@<?= htmlspecialchars($u['username']); ?>"
           style="width:100%; justify-content:center; padding:10px;"
         >Unblock</button>
-      <?php else: ?>
+      <?php elseif ($context !== 'search'): ?>
         <button
           type="button"
           class="btn follow-btn following"

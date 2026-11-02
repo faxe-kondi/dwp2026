@@ -31,6 +31,7 @@ CREATE TABLE posts (
     id                  INT AUTO_INCREMENT PRIMARY KEY,
     user_id             INT          NOT NULL,
     filename            VARCHAR(255) NOT NULL,
+    title               VARCHAR(150) NOT NULL,
     caption             TEXT         NULL,
     created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     front_pinned_at     DATETIME     NULL,

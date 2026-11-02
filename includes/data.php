@@ -1,9 +1,7 @@
 <?php
 /**
  * DEADSTOCK — hardcoded demo data.
- * Stand-in for the database tables this project will use later
- * (posts, users, comments). Swap these arrays for real queries
- * once MySQL / phpMyAdmin is wired up.
+ * Demo content shown alongside database-backed posts in selected views.
  */
 
 $demo_posts = [
@@ -12,6 +10,7 @@ $demo_posts = [
         'username' => 'ravens_closet',
         'avatar_seed' => 'ravens_closet',
         'img_seed' => 'ds-101',
+        'title' => 'Archive Number Nine Cardigan',
         'caption' => "Cop or drop? Archive Number Nine cardigan, thrifted for e12 off a rack nobody was checking.",
         'tags' => ['archive', 'thrifted', 'knitwear'],
         'likes' => 842,
@@ -25,6 +24,7 @@ $demo_posts = [
         'username' => 'og.tenko',
         'avatar_seed' => 'og.tenko',
         'img_seed' => 'ds-102',
+        'title' => 'Worth the Restock Line',
         'caption' => "Camped outside since 5am for this restock. Line wrapped the block twice. Worth it.",
         'tags' => ['restock', 'queue-culture'],
         'likes' => 1290,
@@ -38,6 +38,7 @@ $demo_posts = [
         'username' => 'mona.fits',
         'avatar_seed' => 'mona.fits',
         'img_seed' => 'ds-103',
+        'title' => 'Layering Test #3',
         'caption' => "Layering test #3. Boiler jacket over a hand-me-down flannel, cuffs rolled twice.",
         'tags' => ['layering', 'workwear'],
         'likes' => 431,
@@ -51,6 +52,7 @@ $demo_posts = [
         'username' => 'kudzu',
         'avatar_seed' => 'kudzu',
         'img_seed' => 'ds-104',
+        'title' => 'Hand-Painted Back Panel',
         'caption' => "Hand-painted the back panel myself. Stencil took four passes to get the drip right.",
         'tags' => ['diy', 'custom'],
         'likes' => 967,
@@ -64,6 +66,7 @@ $demo_posts = [
         'username' => 'perry.does.laundry',
         'avatar_seed' => 'perry.does.laundry',
         'img_seed' => 'ds-105',
+        'title' => 'Rotation Check',
         'caption' => "Rotation check: five pairs, one closet, zero regrets.",
         'tags' => ['sneakers', 'rotation'],
         'likes' => 275,
@@ -77,6 +80,7 @@ $demo_posts = [
         'username' => 'ravens_closet',
         'avatar_seed' => 'ravens_closet',
         'img_seed' => 'ds-106',
+        'title' => 'Tag Still On',
         'caption' => "Found the tag still on. Deadstock, size run intact, never worn once.",
         'tags' => ['deadstock', 'grail'],
         'likes' => 1502,
@@ -90,6 +94,7 @@ $demo_posts = [
         'username' => 'nb.thrift',
         'avatar_seed' => 'nb.thrift',
         'img_seed' => 'ds-107',
+        'title' => 'Bin Day Haul',
         'caption' => "Bin day haul. Three bags in, one keeper out - that's the ratio.",
         'tags' => ['thrifted', 'haul'],
         'likes' => 198,
@@ -103,6 +108,7 @@ $demo_posts = [
         'username' => 'og.tenko',
         'avatar_seed' => 'og.tenko',
         'img_seed' => 'ds-108',
+        'title' => 'The Collab Nobody Asked For',
         'caption' => "Collab piece nobody asked for and everybody needs. Drops Friday, midnight.",
         'tags' => ['collab', 'upcoming'],
         'likes' => 723,

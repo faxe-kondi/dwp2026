@@ -3,11 +3,11 @@ require_once __DIR__ . '/../db.php';
 
 class Post
 {
-    public static function create(int $userId, string $filename, ?string $caption): int
+    public static function create(int $userId, string $filename, string $title, ?string $caption): int
     {
         $pdo = Database::connect();
-        $stmt = $pdo->prepare('INSERT INTO posts (user_id, filename, caption) VALUES (?, ?, ?)');
-        $stmt->execute([$userId, $filename, $caption]);
+        $stmt = $pdo->prepare('INSERT INTO posts (user_id, filename, title, caption) VALUES (?, ?, ?, ?)');
+        $stmt->execute([$userId, $filename, $title, $caption]);
         return (int) $pdo->lastInsertId();
     }
 
@@ -16,7 +16,7 @@ class Post
     {
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
-            'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
+            'SELECT posts.id, posts.user_id, posts.filename, posts.title, posts.caption, posts.created_at,
                     posts.front_pinned_at, posts.profile_pinned_at,
                     users.username, users.avatar,
                     (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likes,
@@ -39,7 +39,7 @@ class Post
     {
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
-            'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
+            'SELECT posts.id, posts.user_id, posts.filename, posts.title, posts.caption, posts.created_at,
                     posts.front_pinned_at, posts.profile_pinned_at,
                     users.username, users.avatar,
                     (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likes,
@@ -54,11 +54,83 @@ class Post
         return $stmt->fetchAll();
     }
 
+    public static function search(
+        string $query,
+        ?int $viewerId = null,
+        int $limit = 12,
+        int $offset = 0
+    ): array
+    {
+        if ($limit < 1 || $limit > 50 || $offset < 0) {
+            throw new InvalidArgumentException('Post search pagination is out of range.');
+        }
+
+        $pdo = Database::connect();
+        $searchTerm = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+        $sql = 'SELECT posts.id, posts.user_id, posts.filename, posts.title, posts.caption, posts.created_at,
+                       posts.front_pinned_at, posts.profile_pinned_at,
+                       users.username, users.avatar,
+                       (SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) AS likes,
+                       (SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) AS comment_count,
+                       EXISTS (
+                           SELECT 1 FROM likes
+                           WHERE likes.post_id = posts.id AND likes.user_id = ?
+                       ) AS liked_by_viewer
+                FROM posts
+                JOIN users ON users.id = posts.user_id
+                WHERE (posts.title LIKE ? ESCAPE \'!\' OR posts.caption LIKE ? ESCAPE \'!\')
+                  AND users.is_banned = 0';
+        $params = [$viewerId ?? 0, $searchTerm, $searchTerm];
+
+        if ($viewerId !== null) {
+            $sql .= '
+                AND NOT EXISTS (
+                    SELECT 1 FROM blocks
+                    WHERE (blocks.blocker_id = ? AND blocks.blocked_id = posts.user_id)
+                       OR (blocks.blocker_id = posts.user_id AND blocks.blocked_id = ?)
+                )';
+            $params[] = $viewerId;
+            $params[] = $viewerId;
+        }
+
+        $sql .= ' ORDER BY posts.created_at DESC, posts.id DESC LIMIT ' . $limit . ' OFFSET ' . $offset;
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    public static function countSearchResults(string $query, ?int $viewerId = null): int
+    {
+        $pdo = Database::connect();
+        $searchTerm = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+        $sql = 'SELECT COUNT(*)
+                FROM posts
+                JOIN users ON users.id = posts.user_id
+                WHERE (posts.title LIKE ? ESCAPE \'!\' OR posts.caption LIKE ? ESCAPE \'!\')
+                  AND users.is_banned = 0';
+        $params = [$searchTerm, $searchTerm];
+
+        if ($viewerId !== null) {
+            $sql .= '
+                AND NOT EXISTS (
+                    SELECT 1 FROM blocks
+                    WHERE (blocks.blocker_id = ? AND blocks.blocked_id = posts.user_id)
+                       OR (blocks.blocker_id = posts.user_id AND blocks.blocked_id = ?)
+                )';
+            $params[] = $viewerId;
+            $params[] = $viewerId;
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
+
     public static function findLikedByUser(int $userId): array
     {
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
-            'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
+            'SELECT posts.id, posts.user_id, posts.filename, posts.title, posts.caption, posts.created_at,
                     posts.front_pinned_at, posts.profile_pinned_at,
                     users.username, users.avatar,
                     (SELECT COUNT(*) FROM likes AS all_likes WHERE all_likes.post_id = posts.id) AS likes,
@@ -202,7 +274,7 @@ class Post
 
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
-            'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
+            'SELECT posts.id, posts.user_id, posts.filename, posts.title, posts.caption, posts.created_at,
                     posts.front_pinned_at, posts.profile_pinned_at,
                     users.username, users.avatar,
                     ' . ($includeHotLikes ? 'recent_likes.hot_likes' : '0') . ' AS hot_likes,
@@ -221,7 +293,13 @@ class Post
         return $stmt->fetchAll();
     }
 
-    public static function updateOwned(int $id, int $userId, ?string $filename, ?string $caption): bool
+    public static function updateOwned(
+        int $id,
+        int $userId,
+        ?string $filename,
+        string $title,
+        ?string $caption
+    ): bool
     {
         $pdo = Database::connect();
         $pdo->beginTransaction();
@@ -235,9 +313,9 @@ class Post
             }
 
             $stmt = $pdo->prepare(
-                'UPDATE posts SET filename = COALESCE(?, filename), caption = ? WHERE id = ? AND user_id = ?'
+                'UPDATE posts SET filename = COALESCE(?, filename), title = ?, caption = ? WHERE id = ? AND user_id = ?'
             );
-            $stmt->execute([$filename, $caption, $id, $userId]);
+            $stmt->execute([$filename, $title, $caption, $id, $userId]);
             $pdo->commit();
             return true;
         } catch (PDOException $e) {

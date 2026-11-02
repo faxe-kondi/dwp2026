@@ -101,6 +101,7 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
 .nav-links a { color: var(--bone-dim); font-size: 14px; font-weight: 600; padding: 6px 2px; border-bottom: 2px solid transparent; transition: color 0.15s ease, border-color 0.15s ease; }
 .nav-links a:hover, .nav-links a.active { color: var(--bone); border-color: var(--hazard); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .nav-toggle { display: none; background: none; border: none; color: var(--bone); font-size: 26px; cursor: pointer; }
 
@@ -220,6 +221,45 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .section--dark .ghost-num { -webkit-text-stroke: 1.5px rgba(242, 239, 233, 0.14); }
 @media (max-width: 600px) { .ghost-num { font-size: 70px; top: -18px; } }
 
+.search-page-form { max-width: 760px; margin-bottom: 20px; }
+.search-page-form input { width: 100%; min-width: 0; border: 2px solid var(--ink); padding: 14px 16px; background: transparent; color: var(--ink); font: inherit; font-size: 17px; }
+.search-page-form input:focus { outline: 2px solid var(--hazard); outline-offset: 2px; }
+.search-category-picker { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 18px; }
+.search-category-prompt { color: var(--steel); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+.search-category-prompt strong { color: var(--ink); overflow-wrap: anywhere; }
+.search-category-options { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid #D8D3C4; background: #EAE6D9; }
+.search-category-option { padding: 7px 15px; color: #55554F; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; text-transform: uppercase; transition: background 0.15s ease, color 0.15s ease; }
+.search-category-option:hover { color: var(--ink); background: var(--bone); }
+.search-category-option.active { background: var(--ink); color: var(--bone); }
+.search-category-option:focus-visible { outline: 2px solid var(--hazard); outline-offset: 3px; }
+.search-status { min-height: 1.6em; margin: 0 0 32px; color: var(--steel); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+.search-results-section { margin-top: 40px; }
+.search-results-section .section-head { margin-bottom: 26px; }
+.search-results-section .section-head h2 { font-size: 30px; }
+.search-empty { padding: 20px 0; color: var(--steel); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+.search-comment-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 18px; }
+.search-comment-result { display: flex; align-items: center; gap: 11px; min-height: 66px; padding: 10px 12px; border-left: 2px solid #D8D3C4; background: rgba(234, 230, 217, 0.55); transition: border-color 0.15s ease, background 0.15s ease; }
+.search-comment-result:hover { border-color: var(--hazard); background: #EAE6D9; }
+.search-comment-result > img { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; }
+.search-comment-copy { display: grid; min-width: 0; gap: 2px; font-size: 13px; }
+.search-comment-copy > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-comment-text { display: -webkit-box; overflow: hidden; color: #3A3A38; font-size: 12px; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.search-comment-post-author { color: var(--steel); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+.search-pagination { gap: 6px; margin-top: 28px; }
+.search-pagination .btn { min-width: 40px; min-height: 40px; justify-content: center; padding: 7px 10px; box-shadow: 3px 3px 0 var(--ink); }
+.search-pagination .pagination-arrow { font-size: 20px; line-height: 1; }
+.search-pagination .btn[aria-disabled="true"] { opacity: 0.38; box-shadow: none; cursor: default; }
+.search-page-status { margin-top: 10px; color: var(--steel); font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-align: center; }
+@media (max-width: 560px) {
+  .search-category-picker { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .search-category-options { width: 100%; }
+  .search-category-option { flex: 1; text-align: center; }
+  .search-pagination { gap: 4px; }
+  .search-pagination .btn { min-width: 34px; min-height: 36px; padding: 5px 7px; }
+}
+@media (max-width: 700px) {
+  .search-comment-list { grid-template-columns: 1fr; }
+}
 .page-head { position: relative; overflow: hidden; background: var(--ink); color: var(--bone); padding: 46px 0; border-bottom: 3px solid var(--hazard); }
 .page-head .crumb { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--steel); margin-bottom: 10px; }
 .page-head .crumb a:hover { color: var(--hazard); }
@@ -279,6 +319,7 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .photo-meta .who { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
 .photo-meta .who img { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--panel-line); }
 .photo-meta .who span { font-size: 13px; font-weight: 600; color: var(--bone-dim); }
+.photo-meta .photo-title { font-size: 15px; font-weight: 700; color: var(--bone); overflow-wrap: anywhere; }
 .photo-meta .caption { font-size: 14px; color: var(--bone-dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .photo-meta .stats {
   display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 12px;
@@ -408,6 +449,7 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .uploader-card .handle { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--steel); }
 .uploader-card .btn { margin-left: auto; padding: 9px 16px; font-size: 13px; }
 
+.post-title { font-size: 28px; margin-bottom: 10px; overflow-wrap: anywhere; }
 .post-caption { font-size: 16px; margin-bottom: 16px; }
 .post-caption.is-collapsed { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .caption-toggle,
