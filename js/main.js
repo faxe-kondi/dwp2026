@@ -123,18 +123,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ---------- follow button ----------
   document.querySelectorAll('.follow-btn').forEach(function (btn) {
+    function updateFollowLabel(isActive) {
+      var isFollowing = btn.getAttribute('data-following') === 'true'
+        || (!btn.hasAttribute('data-follow-url') && btn.classList.contains('following'));
+      var label = isFollowing && isActive
+        ? btn.getAttribute('data-following-hover-label')
+        : (isFollowing ? btn.getAttribute('data-following-label') : btn.getAttribute('data-follow-label'));
+      if (label) {
+        btn.textContent = label;
+      }
+    }
+
+    btn.addEventListener('mouseenter', function () { updateFollowLabel(true); });
+    btn.addEventListener('mouseleave', function () { updateFollowLabel(false); });
+    btn.addEventListener('focus', function () { updateFollowLabel(true); });
+    btn.addEventListener('blur', function () { updateFollowLabel(false); });
+
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       if (btn.disabled) return;
 
       if (!btn.hasAttribute('data-follow-url')) {
         var visualFollowing = btn.classList.toggle('following');
-        var visualLabel = visualFollowing
-          ? btn.getAttribute('data-following-label')
-          : btn.getAttribute('data-follow-label');
-        if (visualLabel) {
-          btn.textContent = visualLabel;
-        }
+        btn.setAttribute('data-following', visualFollowing ? 'true' : 'false');
+        updateFollowLabel(btn.matches(':hover') || btn.matches(':focus'));
         return;
       }
 
@@ -156,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var messages = {
               login_required: 'Log in to follow users.',
               cannot_follow_self: 'You cannot follow yourself.',
+              blocked_relation: 'You cannot follow this user while either of you has blocked the other.',
               user_not_found: 'This user is no longer available.',
               invalid_request: 'Your session expired. Refresh the page and try again.'
             };
@@ -167,9 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.classList.toggle('following', data.following);
         btn.setAttribute('data-following', data.following ? 'true' : 'false');
         btn.setAttribute('aria-pressed', data.following ? 'true' : 'false');
-        btn.textContent = data.following
-          ? btn.getAttribute('data-following-label')
-          : btn.getAttribute('data-follow-label');
+        updateFollowLabel(btn.matches(':hover') || btn.matches(':focus'));
       }).catch(function (error) {
         showToast(error.message);
       }).then(function () {
@@ -433,32 +444,81 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ---------- block / unblock (visual only — fades the card + confirms via toast) ----------
-  document.querySelectorAll('[data-block-target]').forEach(function (btn) {
+  // ---------- block / unblock ----------
+  document.querySelectorAll('[data-block-url]').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      var label = btn.getAttribute('data-block-label') || 'this user';
-      var card = btn.closest('.user-card') || btn.closest('.uploader-card');
       closeAllActionMenus();
-      if (card) {
-        card.classList.add('card-blocked-out');
-        setTimeout(function () { card.style.display = 'none'; }, 300);
-      }
-      showToast('Blocked ' + label + ' — manage this anytime from your Blocked list.');
-    });
-  });
+      if (btn.disabled) return;
 
-  document.querySelectorAll('[data-unblock-target]').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      var label = btn.getAttribute('data-unblock-label') || 'this user';
-      var card = btn.closest('.user-card');
-      if (card) {
-        card.classList.add('card-blocked-out');
-        setTimeout(function () { card.style.display = 'none'; }, 300);
-      }
-      showToast('Unblocked ' + label + '.');
+      var blocking = btn.getAttribute('data-blocked') !== 'true';
+      var label = btn.getAttribute('data-block-label') || btn.getAttribute('data-unblock-label') || 'this user';
+      var body = new URLSearchParams();
+      body.set('user_id', btn.getAttribute('data-user-id'));
+      body.set('csrf_token', btn.getAttribute('data-csrf-token'));
+      body.set('blocked', blocking ? '1' : '0');
+      btn.disabled = true;
+
+      fetch(btn.getAttribute('data-block-url'), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+        body: body.toString()
+      }).then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok) {
+            var messages = {
+              login_required: 'Log in to block users.',
+              cannot_block_self: 'You cannot block yourself.',
+              user_not_found: 'This user is no longer available.',
+              invalid_request: 'Your session expired. Refresh the page and try again.'
+            };
+            throw new Error(messages[data.error] || 'Could not update your block. Please try again.');
+          }
+          return data;
+        });
+      }).then(function (data) {
+        btn.setAttribute('data-blocked', data.blocked ? 'true' : 'false');
+        var blockedCard = btn.closest('[data-blocked-card]');
+        if (blockedCard) {
+          btn.textContent = data.blocked ? 'Unblock' : 'Block';
+          showToast(data.blocked
+            ? 'Blocked ' + label + '.'
+            : 'Unblocked ' + label + '. You can block them again here.');
+          return;
+        }
+
+        if (data.blocked && btn.closest('.uploader-card')) {
+          window.location.reload();
+          return;
+        }
+
+        if (
+          btn.closest('.profile-header')
+          || btn.closest('.profile-blocked-state')
+          || btn.closest('.uploader-card')
+        ) {
+          showToast(data.blocked
+            ? 'Blocked ' + label + '.'
+            : 'Unblocked ' + label + '.');
+          window.location.reload();
+          return;
+        }
+
+        var card = btn.closest('.user-card') || btn.closest('.uploader-card') || btn.closest('.profile-header');
+        if (card) {
+          card.classList.add('card-blocked-out');
+          setTimeout(function () { card.style.display = 'none'; }, 300);
+        }
+        showToast(data.blocked
+          ? 'Blocked ' + label + '. Manage this anytime from your Blocked list.'
+          : 'Unblocked ' + label + '.');
+      }).catch(function (error) {
+        showToast(error.message);
+      }).then(function () {
+        btn.disabled = false;
+      });
     });
   });
 

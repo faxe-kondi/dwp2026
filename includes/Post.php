@@ -68,9 +68,14 @@ class Post
              JOIN posts ON posts.id = likes.post_id
              JOIN users ON users.id = posts.user_id
              WHERE likes.user_id = ?
+               AND NOT EXISTS (
+                    SELECT 1 FROM blocks
+                    WHERE (blocks.blocker_id = ? AND blocks.blocked_id = posts.user_id)
+                       OR (blocks.blocker_id = posts.user_id AND blocks.blocked_id = ?)
+               )
              ORDER BY likes.created_at DESC'
         );
-        $stmt->execute([$userId]);
+        $stmt->execute([$userId, $userId, $userId]);
         return $stmt->fetchAll();
     }
 
@@ -97,10 +102,23 @@ class Post
         );
     }
 
-    public static function countAll(): int
+    public static function countAll(?int $viewerId = null): int
     {
         $pdo = Database::connect();
-        return (int) $pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn();
+        $sql = 'SELECT COUNT(*) FROM posts';
+        if ($viewerId !== null) {
+            $sql .= '
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM blocks
+                    WHERE (blocks.blocker_id = ? AND blocks.blocked_id = posts.user_id)
+                       OR (blocks.blocker_id = posts.user_id AND blocks.blocked_id = ?)
+                )';
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$viewerId, $viewerId]);
+            return (int) $stmt->fetchColumn();
+        }
+
+        return (int) $pdo->query($sql)->fetchColumn();
     }
 
     public static function findBrowsePage(
@@ -163,6 +181,25 @@ class Post
             throw new InvalidArgumentException('Feed limits must be positive and offsets must be non-negative.');
         }
 
+        $params = [$viewerId ?? 0];
+        if ($viewerId !== null) {
+            $filter = 'NOT EXISTS (
+                SELECT 1 FROM blocks
+                WHERE (blocks.blocker_id = ? AND blocks.blocked_id = posts.user_id)
+                   OR (blocks.blocker_id = posts.user_id AND blocks.blocked_id = ?)
+            )';
+            $orderPosition = stripos($feedSql, 'ORDER BY');
+            if ($orderPosition === false) {
+                throw new LogicException('Feed SQL must include an ORDER BY clause.');
+            }
+
+            $beforeOrder = substr($feedSql, 0, $orderPosition);
+            $separator = preg_match('/^\s*WHERE\b/i', $beforeOrder) ? ' AND ' : ' WHERE ';
+            $feedSql = $beforeOrder . $separator . $filter . ' ' . substr($feedSql, $orderPosition);
+            $params[] = $viewerId;
+            $params[] = $viewerId;
+        }
+
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
             'SELECT posts.id, posts.user_id, posts.filename, posts.caption, posts.created_at,
@@ -180,7 +217,7 @@ class Post
              ' . $feedSql
             . ($limit === null ? '' : ' LIMIT ' . $limit . ' OFFSET ' . $offset)
         );
-        $stmt->execute([$viewerId ?? 0]);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 

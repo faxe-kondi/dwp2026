@@ -22,6 +22,105 @@ class User
         return (bool) $stmt->fetchColumn();
     }
 
+    public static function findFollowing(int $followerId): array
+    {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare(
+            'SELECT users.id, users.username, users.bio, users.avatar,
+                    (SELECT COUNT(*) FROM posts WHERE posts.user_id = users.id) AS posts,
+                    (SELECT COUNT(*) FROM follows AS followers WHERE followers.following_id = users.id) AS followers
+             FROM follows
+             JOIN users ON users.id = follows.following_id
+             WHERE follows.follower_id = ?
+             ORDER BY follows.created_at DESC, users.username ASC'
+        );
+        $stmt->execute([$followerId]);
+        return $stmt->fetchAll();
+    }
+
+    public static function findBlocked(int $blockerId): array
+    {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare(
+            'SELECT users.id, users.username, users.bio, users.avatar,
+                    (SELECT COUNT(*) FROM posts WHERE posts.user_id = users.id) AS posts,
+                    (SELECT COUNT(*) FROM follows AS followers WHERE followers.following_id = users.id) AS followers
+             FROM blocks
+             JOIN users ON users.id = blocks.blocked_id
+             WHERE blocks.blocker_id = ?
+             ORDER BY blocks.created_at DESC, users.username ASC'
+        );
+        $stmt->execute([$blockerId]);
+        return $stmt->fetchAll();
+    }
+
+    public static function getBlockState(int $viewerId, int $profileId): array
+    {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare(
+            'SELECT
+                EXISTS (
+                    SELECT 1 FROM blocks
+                    WHERE blocker_id = ? AND blocked_id = ?
+                ) AS blocked_by_viewer,
+                EXISTS (
+                    SELECT 1 FROM blocks
+                    WHERE blocker_id = ? AND blocked_id = ?
+                ) AS blocked_viewer'
+        );
+        $stmt->execute([$viewerId, $profileId, $profileId, $viewerId]);
+        $state = $stmt->fetch();
+        return [
+            'blocked_by_viewer' => !empty($state['blocked_by_viewer']),
+            'blocked_viewer' => !empty($state['blocked_viewer']),
+        ];
+    }
+
+    public static function setBlocked(int $blockerId, int $blockedId, bool $blocked): ?bool
+    {
+        if ($blockerId === $blockedId) {
+            throw new DomainException('You cannot block yourself.');
+        }
+
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$blockedId]);
+        if (!$stmt->fetchColumn()) {
+            return null;
+        }
+
+        $pdo->beginTransaction();
+        try {
+            if ($blocked) {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO blocks (blocker_id, blocked_id) VALUES (?, ?)
+                     ON DUPLICATE KEY UPDATE created_at = created_at'
+                );
+                $stmt->execute([$blockerId, $blockedId]);
+
+                $stmt = $pdo->prepare(
+                    'DELETE FROM follows
+                     WHERE (follower_id = ? AND following_id = ?)
+                        OR (follower_id = ? AND following_id = ?)'
+                );
+                $stmt->execute([$blockerId, $blockedId, $blockedId, $blockerId]);
+            } else {
+                $stmt = $pdo->prepare(
+                    'DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?'
+                );
+                $stmt->execute([$blockerId, $blockedId]);
+            }
+
+            $pdo->commit();
+            return $blocked;
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     public static function setFollowing(int $followerId, int $followingId, bool $following): ?bool
     {
         if ($followerId === $followingId) {
@@ -29,6 +128,19 @@ class User
         }
 
         $pdo = Database::connect();
+        if ($following) {
+            $stmt = $pdo->prepare(
+                'SELECT 1 FROM blocks
+                 WHERE (blocker_id = ? AND blocked_id = ?)
+                    OR (blocker_id = ? AND blocked_id = ?)
+                 LIMIT 1'
+            );
+            $stmt->execute([$followerId, $followingId, $followingId, $followerId]);
+            if ($stmt->fetchColumn()) {
+                throw new DomainException('A block prevents this follow.');
+            }
+        }
+
         $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([$followingId]);
         if (!$stmt->fetchColumn()) {

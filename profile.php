@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/Auth.php';
 Auth::boot();
+require_once __DIR__ . '/includes/Csrf.php';
 require_once __DIR__ . '/includes/User.php';
 require_once __DIR__ . '/includes/Post.php';
 require_once __DIR__ . '/includes/data.php';
@@ -30,13 +31,23 @@ if (!$viewer) {
     exit('Profile not found.');
 }
 
-$demo_matches = $isOwnProfile
+$blockState = Auth::check() && !$isOwnProfile
+    ? User::getBlockState((int) Auth::user()['id'], (int) $viewer['id'])
+    : ['blocked_by_viewer' => false, 'blocked_viewer' => false];
+$profileBlocked = $blockState['blocked_by_viewer'] || $blockState['blocked_viewer'];
+$demo_matches = $isOwnProfile && !$profileBlocked
     ? array_values(array_filter($demo_posts, fn($p) => $p['username'] === $viewer['username']))
     : [];
-$real_matches = array_map('ds_post_view', Post::findByUser((int) $viewer['id']));
+$real_matches = $profileBlocked
+    ? []
+    : array_map('ds_post_view', Post::findByUser((int) $viewer['id']));
 $user_posts = array_merge($real_matches, $demo_matches);
 usort($user_posts, fn($a, $b) => ($b['pinned'] <=> $a['pinned']));
 $profile = ds_profile_view($viewer, count($user_posts));
+$isFollowingProfile = Auth::check()
+    && !$isOwnProfile
+    && !$profileBlocked
+    && User::isFollowing((int) Auth::user()['id'], (int) $viewer['id']);
 
 $active = 'profile';
 $page_title = $profile['display_name'];
@@ -58,7 +69,22 @@ include __DIR__ . '/includes/header.php';
       <?php endif; ?>
     <?php endif; ?>
 
-    <?php if (empty($user_posts)): ?>
+    <?php if (!$isOwnProfile && $blockState['blocked_by_viewer']): ?>
+      <div class="empty-state profile-blocked-state">
+        <p>You blocked this user. Unblock them to see their content.</p>
+        <button
+          type="button"
+          class="btn unblock-btn"
+          data-block-url="includes/block.php"
+          data-user-id="<?= (int) $viewer['id']; ?>"
+          data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
+          data-blocked="true"
+          data-unblock-label="@<?= htmlspecialchars($profile['username']); ?>"
+        >Unblock user</button>
+      </div>
+    <?php elseif (!$isOwnProfile && $blockState['blocked_viewer']): ?>
+      <div class="empty-state profile-blocked-state">You can't see this user's content.</div>
+    <?php elseif (empty($user_posts)): ?>
       <div class="empty-state">No posts yet.</div>
     <?php else: ?>
       <div class="photo-grid">
