@@ -151,36 +151,20 @@ class User
             return null;
         }
 
-        $pdo->beginTransaction();
-        try {
-            if ($blocked) {
-                $stmt = $pdo->prepare(
-                    'INSERT INTO blocks (blocker_id, blocked_id) VALUES (?, ?)
-                     ON DUPLICATE KEY UPDATE created_at = created_at'
-                );
-                $stmt->execute([$blockerId, $blockedId]);
-
-                $stmt = $pdo->prepare(
-                    'DELETE FROM follows
-                     WHERE (follower_id = ? AND following_id = ?)
-                        OR (follower_id = ? AND following_id = ?)'
-                );
-                $stmt->execute([$blockerId, $blockedId, $blockedId, $blockerId]);
-            } else {
-                $stmt = $pdo->prepare(
-                    'DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?'
-                );
-                $stmt->execute([$blockerId, $blockedId]);
-            }
-
-            $pdo->commit();
-            return $blocked;
-        } catch (PDOException $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            throw $e;
+        if ($blocked) {
+            $stmt = $pdo->prepare(
+                'INSERT INTO blocks (blocker_id, blocked_id) VALUES (?, ?)
+                 ON DUPLICATE KEY UPDATE created_at = created_at'
+            );
+            $stmt->execute([$blockerId, $blockedId]);
+        } else {
+            $stmt = $pdo->prepare(
+                'DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?'
+            );
+            $stmt->execute([$blockerId, $blockedId]);
         }
+
+        return $blocked;
     }
 
     public static function setFollowing(int $followerId, int $followingId, bool $following): ?bool
@@ -190,19 +174,6 @@ class User
         }
 
         $pdo = Database::connect();
-        if ($following) {
-            $stmt = $pdo->prepare(
-                'SELECT 1 FROM blocks
-                 WHERE (blocker_id = ? AND blocked_id = ?)
-                    OR (blocker_id = ? AND blocked_id = ?)
-                 LIMIT 1'
-            );
-            $stmt->execute([$followerId, $followingId, $followingId, $followerId]);
-            if ($stmt->fetchColumn()) {
-                throw new DomainException('A block prevents this follow.');
-            }
-        }
-
         $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([$followingId]);
         if (!$stmt->fetchColumn()) {
@@ -214,7 +185,17 @@ class User
                 'INSERT INTO follows (follower_id, following_id) VALUES (?, ?)
                  ON DUPLICATE KEY UPDATE created_at = created_at'
             );
-            $stmt->execute([$followerId, $followingId]);
+            try {
+                $stmt->execute([$followerId, $followingId]);
+            } catch (PDOException $e) {
+                if (
+                    ($e->errorInfo[0] ?? null) === '45000'
+                    && ($e->errorInfo[2] ?? null) === 'A block prevents this follow.'
+                ) {
+                    throw new DomainException('A block prevents this follow.', 0, $e);
+                }
+                throw $e;
+            }
         } else {
             $stmt = $pdo->prepare(
                 'DELETE FROM follows WHERE follower_id = ? AND following_id = ?'
