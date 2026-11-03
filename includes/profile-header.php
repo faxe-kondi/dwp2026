@@ -53,7 +53,7 @@ if (!isset($profile_tab)) { $profile_tab = 'posts'; }
           aria-label="More options for @<?= htmlspecialchars($profile['username']); ?>"
         >&#8942;</button>
         <div class="action-menu-list" id="profileUserMenu">
-          <button type="button" class="action-menu-item" data-report-type="user" data-report-target="@<?= htmlspecialchars($profile['username']); ?>">Report user</button>
+          <button type="button" class="action-menu-item" data-report-type="user" data-report-id="<?= (int) $viewer['id']; ?>" data-report-target="@<?= htmlspecialchars($profile['username']); ?>">Report user</button>
           <?php if (Auth::check()): ?>
             <button type="button" class="action-menu-item action-menu-item--danger" data-block-url="includes/block.php" data-user-id="<?= (int) $viewer['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="false" data-block-label="@<?= htmlspecialchars($profile['username']); ?>">Block user</button>
           <?php endif; ?>

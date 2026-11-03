@@ -41,9 +41,13 @@
   </div>
 </footer>
 
+<?php require_once __DIR__ . '/Csrf.php'; ?>
 <dialog id="reportModal" class="modal">
   <div class="modal-box">
-    <form data-proto id="reportForm">
+    <form id="reportForm" action="includes/submit-report.php" method="post">
+      <?= Csrf::field(); ?>
+      <input type="hidden" name="target_type">
+      <input type="hidden" name="target_id">
       <div class="modal-head">
         <h3 id="reportModalTitle">Report</h3>
         <button type="button" class="modal-close" id="reportModalCloseX" aria-label="Close">&times;</button>
@@ -52,18 +56,18 @@
 
       <div class="field">
         <label for="reportReason">Reason</label>
-        <select id="reportReason" name="reason">
-          <option>Spam</option>
-          <option>Counterfeit or fake item</option>
-          <option>Harassment or hate</option>
-          <option>Inappropriate content</option>
-          <option>Other</option>
+        <select id="reportReason" name="reason_id">
+          <option value="1">Spam</option>
+          <option value="2">Counterfeit or fake item</option>
+          <option value="3">Harassment or hate</option>
+          <option value="4">Inappropriate content</option>
+          <option value="5">Other</option>
         </select>
       </div>
 
       <div class="field" style="margin-bottom:0;">
         <label for="reportDetails">Additional details (optional)</label>
-        <textarea id="reportDetails" rows="3" placeholder="Anything else mods should know..."></textarea>
+        <textarea id="reportDetails" name="details" rows="3" maxlength="1000" placeholder="Anything else mods should know..."></textarea>
       </div>
 
       <div class="modal-actions">
@@ -77,7 +81,7 @@
         <h3>Report sent</h3>
         <button type="button" class="modal-close" id="reportConfirmCloseX" aria-label="Close">&times;</button>
       </div>
-      <p class="modal-confirm">Thanks &mdash; this is a prototype, so nothing was actually sent, but a real report would go to the mod queue from here.</p>
+      <p class="modal-confirm">Your report has been submitted. Thank you for helping keep the community safe.</p>
       <div class="modal-confirm-actions">
         <button type="button" class="btn btn-solid" id="reportModalDone">Done</button>
       </div>

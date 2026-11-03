@@ -90,7 +90,9 @@ function ds_photo_card($p, $liked = false) {
           <?php endif; ?>
           <span>&#128172; <?= $p['comment_count']; ?></span>
           <span><?= htmlspecialchars($p['time']); ?></span>
-          <button class="icon-flag" data-report-type="post" data-report-target="<?= htmlspecialchars($reportTarget); ?>" title="Report post" aria-label="Report post">&#128681;</button>
+          <?php if (!empty($p['is_real']) && !$isOwnPost): ?>
+            <button type="button" class="icon-flag" data-report-type="post" data-report-id="<?= (int) $p['id']; ?>" data-report-target="<?= htmlspecialchars($reportTarget); ?>" title="Report post" aria-label="Report post">&#128681;</button>
+          <?php endif; ?>
         </div>
       </div>
     </div>

@@ -297,7 +297,9 @@ include __DIR__ . '/includes/header.php';
                 <button type="submit" class="action-menu-item action-menu-item--danger">Delete post</button>
               </form>
             <?php else: ?>
-              <button type="button" class="action-menu-item" data-report-type="user" data-report-target="@<?= htmlspecialchars($post['username']); ?>">Report user</button>
+              <?php if (!empty($post['is_real'])): ?>
+                <button type="button" class="action-menu-item" data-report-type="user" data-report-id="<?= (int) $realRow['user_id']; ?>" data-report-target="@<?= htmlspecialchars($post['username']); ?>">Report user</button>
+              <?php endif; ?>
               <?php if (!empty($post['is_real']) && $currentUser): ?>
                 <button type="button" class="action-menu-item action-menu-item--danger" data-block-url="includes/block.php" data-user-id="<?= (int) $realRow['user_id']; ?>" data-post-id="<?= (int) $post['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="false" data-block-label="@<?= htmlspecialchars($post['username']); ?>">Block user</button>
               <?php endif; ?>
@@ -345,8 +347,8 @@ include __DIR__ . '/includes/header.php';
         <?php endif; ?>
         <span>&#128172; <?= count($post_comments); ?> comments</span>
         <span><?= $post['hot'] ? '&#128293; trending' : 'in the feed'; ?></span>
-        <?php if (!$isOwner): ?>
-          <button class="icon-flag" data-report-type="post" data-report-target="@<?= htmlspecialchars($post['username']); ?>'s post" title="Report post" aria-label="Report post" style="margin-left:auto;">&#128681; Report</button>
+        <?php if (!empty($post['is_real']) && !$isOwner): ?>
+          <button type="button" class="icon-flag" data-report-type="post" data-report-id="<?= (int) $post['id']; ?>" data-report-target="@<?= htmlspecialchars($post['username']); ?>'s post" title="Report post" aria-label="Report post" style="margin-left:auto;">&#128681; Report</button>
         <?php endif; ?>
       </div>
 
@@ -389,7 +391,12 @@ include __DIR__ . '/includes/header.php';
                     <span class="who">@<?= htmlspecialchars($c['username']); ?></span>
                   <?php endif; ?>
                   <time><?= $c['time']; ?></time>
-                  <button class="icon-flag icon-flag--inline" data-report-type="comment" data-report-target="@<?= htmlspecialchars($c['username']); ?>'s comment" title="Report comment" aria-label="Report comment">&#128681;</button>
+                  <?php if (
+                      !empty($post['is_real'])
+                      && (!Auth::check() || (int) $c['user_id'] !== (int) Auth::user()['id'])
+                  ): ?>
+                    <button type="button" class="icon-flag icon-flag--inline" data-report-type="comment" data-report-id="<?= (int) $c['id']; ?>" data-report-target="@<?= htmlspecialchars($c['username']); ?>'s comment" title="Report comment" aria-label="Report comment">&#128681;</button>
+                  <?php endif; ?>
                   <?php if (
                       !empty($post['is_real'])
                       && Auth::check()
