@@ -6,10 +6,34 @@ class User
     public static function find(int $id): ?array
     {
         $pdo = Database::connect();
-        $stmt = $pdo->prepare('SELECT id, username, bio, avatar, created_at FROM users WHERE id = ? LIMIT 1');
+        $stmt = $pdo->prepare(
+            'SELECT users.id, users.username, users.bio, users.avatar, users.created_at,
+                    (SELECT COUNT(*) FROM follows WHERE follows.following_id = users.id) AS follower_count,
+                    (SELECT COUNT(*) FROM follows WHERE follows.follower_id = users.id) AS following_count
+             FROM users
+             WHERE users.id = ?
+             LIMIT 1'
+        );
         $stmt->execute([$id]);
         $row = $stmt->fetch();
         return $row ?: null;
+    }
+
+    public static function getFollowCounts(int $userId): array
+    {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare(
+            'SELECT
+                (SELECT COUNT(*) FROM follows WHERE following_id = ?) AS follower_count,
+                (SELECT COUNT(*) FROM follows WHERE follower_id = ?) AS following_count'
+        );
+        $stmt->execute([$userId, $userId]);
+        $counts = $stmt->fetch();
+
+        return [
+            'followers' => (int) $counts['follower_count'],
+            'following' => (int) $counts['following_count'],
+        ];
     }
 
     public static function search(

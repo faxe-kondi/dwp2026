@@ -18,8 +18,8 @@ function ds_profile_view(array $user, int $postCount): array {
     'joined'        => 'Member since ' . date('M Y', strtotime($user['created_at'])),
     'stats' => [
       'posts'      => $postCount,
-      'followers'  => 0,
-      'following'  => 0,
+      'followers'  => (int) ($user['follower_count'] ?? 0),
+      'following'  => (int) ($user['following_count'] ?? 0),
     ],
   ];
 }
