@@ -417,12 +417,14 @@ document.addEventListener('DOMContentLoaded', function () {
   var reportModalTitle = document.getElementById('reportModalTitle');
   var reportModalSub = document.getElementById('reportModalSub');
 
-  function openReportModal(type, target) {
+  function openReportModal(type, target, targetId) {
     if (!reportModal) return;
     var label = type === 'post' ? 'post' : (type === 'comment' ? 'comment' : 'user');
     reportModalTitle.textContent = 'Report ' + label;
     reportModalSub.textContent = target ? ('Reporting ' + target) : '';
     reportForm.reset();
+    reportForm.elements.namedItem('target_type').value = type;
+    reportForm.elements.namedItem('target_id').value = targetId;
     reportForm.hidden = false;
     reportConfirm.hidden = true;
     if (typeof reportModal.showModal === 'function' && !reportModal.open) {
@@ -441,15 +443,47 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
       e.stopPropagation();
       closeAllActionMenus();
-      openReportModal(btn.getAttribute('data-report-type'), btn.getAttribute('data-report-target'));
+      openReportModal(
+        btn.getAttribute('data-report-type'),
+        btn.getAttribute('data-report-target'),
+        btn.getAttribute('data-report-id')
+      );
     });
   });
 
   if (reportForm) {
     reportForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      reportForm.hidden = true;
-      reportConfirm.hidden = false;
+      var submitButton = reportForm.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      var body = new URLSearchParams(new FormData(reportForm));
+
+      fetch(reportForm.action, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+        body: body.toString()
+      }).then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok) {
+            var messages = {
+              login_required: 'Log in to submit a report.',
+              invalid_request: 'Your session expired or the report details are invalid. Refresh and try again.',
+              target_not_found: 'This item is no longer available to report.',
+              cannot_report_own_content: 'You cannot report your own content.'
+            };
+            throw new Error(messages[data.error] || data.message || 'Could not submit the report. Please try again.');
+          }
+          return data;
+        });
+      }).then(function () {
+        reportForm.hidden = true;
+        reportConfirm.hidden = false;
+      }).catch(function (error) {
+        showToast(error.message);
+      }).then(function () {
+        submitButton.disabled = false;
+      });
     });
   }
 
