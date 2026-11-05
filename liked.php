@@ -20,7 +20,7 @@ include __DIR__ . '/includes/header.php';
       <div class="empty-state">No likes yet &mdash; go heart a few fits.</div>
     <?php else: ?>
       <div class="photo-grid">
-        <?php foreach ($liked_posts as $p) ds_photo_card($p, true); ?>
+        <?php foreach ($liked_posts as $p) ds_photo_card($p); ?>
       </div>
     <?php endif; ?>
 

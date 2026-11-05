@@ -4,7 +4,6 @@ Auth::boot();
 require_once __DIR__ . '/includes/Csrf.php';
 require_once __DIR__ . '/includes/User.php';
 require_once __DIR__ . '/includes/Post.php';
-require_once __DIR__ . '/includes/data.php';
 require_once __DIR__ . '/includes/helpers.php';
 
 $requestedUserId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
@@ -35,13 +34,9 @@ $blockState = Auth::check() && !$isOwnProfile
     ? User::getBlockState((int) Auth::user()['id'], (int) $viewer['id'])
     : ['blocked_by_viewer' => false, 'blocked_viewer' => false];
 $profileBlocked = $blockState['blocked_by_viewer'] || $blockState['blocked_viewer'];
-$demo_matches = $isOwnProfile && !$profileBlocked
-    ? array_values(array_filter($demo_posts, fn($p) => $p['username'] === $viewer['username']))
-    : [];
-$real_matches = $profileBlocked
+$user_posts = $profileBlocked
     ? []
     : array_map('ds_post_view', Post::findByUser((int) $viewer['id']));
-$user_posts = array_merge($real_matches, $demo_matches);
 usort($user_posts, fn($a, $b) => ($b['pinned'] <=> $a['pinned']));
 $profile = ds_profile_view($viewer, count($user_posts));
 $isFollowingProfile = Auth::check()

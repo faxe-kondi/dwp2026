@@ -28,31 +28,23 @@ function ds_post_view(array $row): array {
     'time'          => ds_time_ago($row['created_at']),
     'hot'           => !empty($row['hot_likes']),
     'pinned'        => !empty($row['front_pinned_at']) || !empty($row['profile_pinned_at']),
-    'is_real'       => true,
   ];
 }
 
 function ds_post_avatar_url(array $p, int $size = 96): string {
-  if (!empty($p['is_real'])) {
-    return ds_user_avatar_url(['username' => $p['username'], 'avatar' => $p['avatar_file']], $size);
-  }
-  return ds_avatar_url($p['avatar_seed'], $size);
+  return ds_user_avatar_url(['username' => $p['username'], 'avatar' => $p['avatar_file']], $size);
 }
 
-function ds_post_image_url(array $p, int $w = 800, int $h = 1000): string {
-  if (!empty($p['is_real'])) {
-    return 'uploads/posts/' . $p['image_file'];
-  }
-  return ds_photo_url($p['img_seed'], $w, $h);
+function ds_post_image_url(array $p): string {
+  return 'uploads/posts/' . $p['image_file'];
 }
 
-function ds_photo_card($p, $liked = false) {
+function ds_photo_card($p) {
   $img = ds_post_image_url($p);
   $avatar = ds_post_avatar_url($p, 60);
-  $isOwnPost = !empty($p['is_real'])
-      && Auth::check()
+  $isOwnPost = Auth::check()
       && (int) $p['user_id'] === (int) Auth::user()['id'];
-  $isLiked = !empty($p['is_real']) ? !empty($p['liked_by_viewer']) : $liked;
+  $isLiked = !empty($p['liked_by_viewer']);
   $likeClass = $isLiked ? 'like-btn liked' : 'like-btn';
   $reportTarget = '@' . $p['username'] . "'s post";
   ?>
@@ -64,7 +56,7 @@ function ds_photo_card($p, $liked = false) {
         <img src="<?= htmlspecialchars($img); ?>" alt="<?= htmlspecialchars($p['title']); ?>" loading="lazy">
       </a>
       <div class="photo-meta">
-        <a href="<?= !empty($p['is_real']) ? 'profile.php?id=' . (int) $p['user_id'] : 'profile.php'; ?>" class="who">
+        <a href="profile.php?id=<?= (int) $p['user_id']; ?>" class="who">
           <img src="<?= htmlspecialchars($avatar); ?>" alt="<?= htmlspecialchars($p['username']); ?>">
           <span>@<?= htmlspecialchars($p['username']); ?></span>
         </a>
@@ -79,7 +71,7 @@ function ds_photo_card($p, $liked = false) {
               <span class="like-count"><?= $p['likes']; ?></span>
             </span>
           <?php else: ?>
-            <?php if (!empty($p['is_real']) && Auth::check()): ?>
+            <?php if (Auth::check()): ?>
               <button type="button" class="<?= $likeClass; ?>" data-like-url="includes/like.php" data-post-id="<?= $p['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-likes="<?= $p['likes']; ?>" data-liked="<?= $isLiked ? 'true' : 'false'; ?>" aria-pressed="<?= $isLiked ? 'true' : 'false'; ?>" aria-label="<?= $isLiked ? 'Unlike post' : 'Like post'; ?>">
             <?php else: ?>
               <button type="button" class="<?= $likeClass; ?>" data-likes="<?= $p['likes']; ?>">
@@ -90,7 +82,7 @@ function ds_photo_card($p, $liked = false) {
           <?php endif; ?>
           <span>&#128172; <?= $p['comment_count']; ?></span>
           <span><?= htmlspecialchars($p['time']); ?></span>
-          <?php if (!empty($p['is_real']) && !$isOwnPost): ?>
+          <?php if (!$isOwnPost): ?>
             <button type="button" class="icon-flag" data-report-type="post" data-report-id="<?= (int) $p['id']; ?>" data-report-target="<?= htmlspecialchars($reportTarget); ?>" title="Report post" aria-label="Report post">&#128681;</button>
           <?php endif; ?>
         </div>

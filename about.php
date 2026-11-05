@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/includes/SiteSettings.php';
-require_once __DIR__ . '/includes/data.php';
 $description = trim(SiteSettings::get('description'));
 $rules = array_values(array_filter(
     array_map(
@@ -27,7 +26,7 @@ include __DIR__ . '/includes/header.php';
 <section class="page-body">
   <div class="wrap about-grid">
     <div>
-      <img src="<?= ds_photo_url('ds-about-1', 700, 620); ?>" alt="Streetwear rack">
+      <img src="uploads/posts/placeholder2.webp" alt="DEADSTOCK post">
       <div class="stat-row">
         <div><b><?= number_format($aboutStats['posts']); ?></b><span>POSTS</span></div>
         <div><b><?= number_format($aboutStats['members']); ?></b><span>MEMBERS</span></div>
