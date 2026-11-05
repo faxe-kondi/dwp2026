@@ -40,7 +40,7 @@ Auth::boot();
 </nav>
 
 <?php
-$ticker_items = ['NEW DROPS DAILY', 'POST YOUR FIT', '<b>DEADSTOCK</b> PROTOTYPE BUILD', 'THRIFTED &gt; RETAIL'];
+$ticker_items = ['NEW DROPS DAILY', 'POST YOUR FIT', '<b>DEADSTOCK</b> COMMUNITY', 'THRIFTED &gt; RETAIL'];
 $ticker_repeats = 8;
 ?>
 <div class="ticker" aria-hidden="true">

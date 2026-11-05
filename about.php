@@ -1,5 +1,15 @@
 <?php
-require __DIR__ . '/includes/data.php';
+require_once __DIR__ . '/includes/SiteSettings.php';
+require_once __DIR__ . '/includes/data.php';
+$description = trim(SiteSettings::get('description'));
+$rules = array_values(array_filter(
+    array_map(
+        static fn($rule) => trim(preg_replace('/^\d+[.)]\s*/', '', trim($rule))),
+        preg_split('/\R/u', SiteSettings::get('rules')) ?: []
+    ),
+    static fn($rule) => $rule !== ''
+));
+$aboutStats = SiteSettings::getAboutStats();
 $active = 'about';
 $page_title = 'About';
 include __DIR__ . '/includes/header.php';
@@ -19,30 +29,33 @@ include __DIR__ . '/includes/header.php';
     <div>
       <img src="<?= ds_photo_url('ds-about-1', 700, 620); ?>" alt="Streetwear rack">
       <div class="stat-row">
-        <div><b><?= count($demo_posts); ?>+</b><span>POSTS TODAY</span></div>
-        <div><b>2.1K</b><span>MEMBERS</span></div>
-        <div><b>118</b><span>DROPS TRACKED</span></div>
+        <div><b><?= number_format($aboutStats['posts']); ?></b><span>POSTS</span></div>
+        <div><b><?= number_format($aboutStats['members']); ?></b><span>MEMBERS</span></div>
+        <div><b><?= number_format($aboutStats['comments']); ?></b><span>COMMENTS</span></div>
       </div>
     </div>
     <div class="about-copy">
-      <p>DEADSTOCK started as a school project: an image board built around one idea &mdash; the fit is only half the story. The other half is where you found it, how long you waited, and who else was in line with you.</p>
-      <p>Right now this is a prototype. Every photo, comment, and profile you see is hardcoded so we can nail the layout before wiring up a real database. Once the backend lands, this page's numbers, the feed, and the profile system will run on MySQL through phpMyAdmin instead of static arrays.</p>
-      <p>The site is built with plain PHP, no framework, so the structure stays easy to follow as we add features: accounts, real uploads, likes that persist, and comment threads that save.</p>
+      <section class="about-section">
+        <h2>About DEADSTOCK</h2>
+        <?php if ($description !== ''): ?>
+          <p class="about-description"><?= nl2br(htmlspecialchars($description)); ?></p>
+        <?php else: ?>
+          <p class="about-empty">A description has not been added yet.</p>
+        <?php endif; ?>
+      </section>
 
-      <div class="value-list">
-        <div class="row">
-          <span class="num">01</span>
-          <div><h3>Post the find</h3><p>Thrifted, restocked, hand-painted &mdash; if it's a fit, it belongs on the feed.</p></div>
-        </div>
-        <div class="row">
-          <span class="num">02</span>
-          <div><h3>Tag the story</h3><p>Where it came from and what it took to get it matters as much as the piece itself.</p></div>
-        </div>
-        <div class="row">
-          <span class="num">03</span>
-          <div><h3>Keep it hardcoded, for now</h3><p>This build is a front-end prototype. The database, accounts, and real uploads come next.</p></div>
-        </div>
-      </div>
+      <section class="about-section about-rules">
+        <h2>Community rules</h2>
+        <?php if ($rules): ?>
+          <ol>
+            <?php foreach ($rules as $rule): ?>
+              <li><?= htmlspecialchars($rule); ?></li>
+            <?php endforeach; ?>
+          </ol>
+        <?php else: ?>
+          <p class="about-empty">Community rules have not been added yet.</p>
+        <?php endif; ?>
+      </section>
     </div>
   </div>
 </section>
