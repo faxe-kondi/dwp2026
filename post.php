@@ -2,16 +2,38 @@
 require_once __DIR__ . '/includes/Auth.php';
 Auth::boot();
 require_once __DIR__ . '/includes/Csrf.php';
-require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/Post.php';
 require_once __DIR__ . '/includes/Comment.php';
 require_once __DIR__ . '/includes/User.php';
 
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 1;
+$requestedId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+$id = $requestedId !== false && $requestedId !== null && $requestedId > 0
+    ? $requestedId
+    : 0;
 $currentUser = Auth::user();
 $realRow = Post::findById($id, $currentUser ? (int) $currentUser['id'] : null);
-$blockedPostState = $realRow && $currentUser
+if (!$realRow) {
+    http_response_code(404);
+    $active = '';
+    $page_title = 'Post not found';
+    include __DIR__ . '/includes/header.php';
+    ?>
+    <section class="page-body blocked-post-page">
+      <div class="wrap">
+        <div class="blocked-post-notice" role="status">
+          <h1>Post not found</h1>
+          <p>This post may have been deleted or is no longer available.</p>
+          <a class="btn btn-solid" href="browse.php">Browse posts</a>
+        </div>
+      </div>
+    </section>
+    <?php
+    include __DIR__ . '/includes/footer.php';
+    exit;
+}
+
+$blockedPostState = $currentUser
     ? User::getBlockState((int) $currentUser['id'], (int) $realRow['user_id'])
     : ['blocked_by_viewer' => false, 'blocked_viewer' => false];
 $postBlockedForViewer = $blockedPostState['blocked_by_viewer'] || $blockedPostState['blocked_viewer'];
@@ -51,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     Csrf::verifyOrFail();
     $currentUser = Auth::user();
 
-    if (!$realRow || !$currentUser || (int) $realRow['user_id'] !== (int) $currentUser['id']) {
+    if (!$currentUser || (int) $realRow['user_id'] !== (int) $currentUser['id']) {
         http_response_code(404);
         exit('Post not found.');
     }
@@ -83,11 +105,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'comme
     Auth::requireLogin();
     Csrf::verifyOrFail();
 
-    if (!$realRow) {
-        http_response_code(404);
-        exit('Post not found.');
-    }
-
     $submittedComment = $_POST['content'] ?? '';
     if (!is_string($submittedComment)) {
         $errors[] = 'Enter a valid comment.';
@@ -109,11 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'comme
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit_comment') {
     Auth::requireLogin();
     Csrf::verifyOrFail();
-
-    if (!$realRow) {
-        http_response_code(404);
-        exit('Post not found.');
-    }
 
     $commentId = filter_var($_POST['comment_id'] ?? null, FILTER_VALIDATE_INT);
     if ($commentId === false || $commentId === null || $commentId < 1) {
@@ -152,11 +164,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     Auth::requireLogin();
     Csrf::verifyOrFail();
 
-    if (!$realRow) {
-        http_response_code(404);
-        exit('Post not found.');
-    }
-
     $commentId = filter_var($_POST['comment_id'] ?? null, FILTER_VALIDATE_INT);
     if ($commentId === false || $commentId === null || $commentId < 1) {
         http_response_code(404);
@@ -178,52 +185,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     exit;
 }
 
-if ($realRow) {
-    $post = ds_post_view($realRow);
-} else {
-    $post = null;
-    foreach ($demo_posts as $p) {
-        if ($p['id'] === $id) { $post = $p; break; }
-    }
-    if (!$post) { $post = $demo_posts[0]; }
-}
+$post = ds_post_view($realRow);
 
-$isOwner = !empty($post['is_real'])
-    && $currentUser
+$isOwner = $currentUser
     && (int) $realRow['user_id'] === (int) $currentUser['id'];
-$isFollowingPoster = !empty($post['is_real'])
-    && $currentUser
+$isFollowingPoster = $currentUser
     && !$isOwner
     && !$postBlockedForViewer
     && User::isFollowing((int) $currentUser['id'], (int) $realRow['user_id']);
 
-if (!empty($post['is_real'])) {
-    $post_comments = $blockedPostState['blocked_by_viewer'] ? [] : array_map(
-        static function (array $comment): array {
-            return [
-                'id' => (int) $comment['id'],
+$post_comments = $blockedPostState['blocked_by_viewer'] ? [] : array_map(
+    static function (array $comment): array {
+        return [
+            'id' => (int) $comment['id'],
+            'username' => $comment['username'],
+            'user_id' => (int) $comment['user_id'],
+            'avatar_url' => ds_user_avatar_url([
                 'username' => $comment['username'],
-                'user_id' => (int) $comment['user_id'],
-                'avatar_url' => ds_user_avatar_url([
-                    'username' => $comment['username'],
-                    'avatar' => $comment['avatar'],
-                ], 38),
-                'time' => ds_time_ago($comment['created_at']),
-                'content' => $comment['content'],
-                'text' => $comment['content'],
-            ];
-        },
-        Comment::findByPost((int) $post['id'])
-    );
-} else {
-    $post_comments = array_map(
-        static function (array $comment): array {
-            $comment['avatar_url'] = ds_avatar_url($comment['avatar_seed'], 38);
-            return $comment;
-        },
-        array_values(array_filter($demo_comments, fn($comment) => $comment['post_id'] === $post['id']))
-    );
-}
+                'avatar' => $comment['avatar'],
+            ], 38),
+            'time' => ds_time_ago($comment['created_at']),
+            'content' => $comment['content'],
+            'text' => $comment['content'],
+        ];
+    },
+    Comment::findByPost((int) $post['id'])
+);
 
 $active = '';
 $page_title = $post['title'] . ' - @' . $post['username'];
@@ -260,16 +247,16 @@ include __DIR__ . '/includes/header.php';
       </div>
     <?php else: ?>
     <div class="post-image">
-      <img src="<?= htmlspecialchars(ds_post_image_url($post, 900, 1125)); ?>" alt="<?= htmlspecialchars($post['title']); ?>">
+      <img src="<?= htmlspecialchars(ds_post_image_url($post)); ?>" alt="<?= htmlspecialchars($post['title']); ?>">
     </div>
 
     <div class="post-details">
       <div class="uploader-card">
-        <a class="uploader-profile" href="<?= !empty($post['is_real']) ? 'profile.php?id=' . (int) $post['user_id'] : 'profile.php'; ?>">
+        <a class="uploader-profile" href="profile.php?id=<?= (int) $post['user_id']; ?>">
           <img src="<?= htmlspecialchars(ds_post_avatar_url($post, 104)); ?>" alt="">
           <span class="name"><?= htmlspecialchars($post['username']); ?></span>
         </a>
-        <?php if (!empty($post['is_real']) && !$isOwner): ?>
+        <?php if (!$isOwner): ?>
           <?php if ($currentUser): ?>
             <button
               type="button"
@@ -297,10 +284,8 @@ include __DIR__ . '/includes/header.php';
                 <button type="submit" class="action-menu-item action-menu-item--danger">Delete post</button>
               </form>
             <?php else: ?>
-              <?php if (!empty($post['is_real'])): ?>
-                <button type="button" class="action-menu-item" data-report-type="user" data-report-id="<?= (int) $realRow['user_id']; ?>" data-report-target="@<?= htmlspecialchars($post['username']); ?>">Report user</button>
-              <?php endif; ?>
-              <?php if (!empty($post['is_real']) && $currentUser): ?>
+              <button type="button" class="action-menu-item" data-report-type="user" data-report-id="<?= (int) $realRow['user_id']; ?>" data-report-target="@<?= htmlspecialchars($post['username']); ?>">Report user</button>
+              <?php if ($currentUser): ?>
                 <button type="button" class="action-menu-item action-menu-item--danger" data-block-url="includes/block.php" data-user-id="<?= (int) $realRow['user_id']; ?>" data-post-id="<?= (int) $post['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="false" data-block-label="@<?= htmlspecialchars($post['username']); ?>">Block user</button>
               <?php endif; ?>
             <?php endif; ?>
@@ -329,17 +314,15 @@ include __DIR__ . '/includes/header.php';
             <span class="like-count"><?= $post['likes']; ?></span>
           </span>
         <?php else: ?>
-          <?php if (!empty($post['is_real']) && Auth::check()): ?>
+          <?php if (Auth::check()): ?>
             <button type="button" class="like-btn<?= !empty($post['liked_by_viewer']) ? ' liked' : ''; ?>" data-like-url="includes/like.php" data-post-id="<?= $post['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-likes="<?= $post['likes']; ?>" data-liked="<?= !empty($post['liked_by_viewer']) ? 'true' : 'false'; ?>" aria-pressed="<?= !empty($post['liked_by_viewer']) ? 'true' : 'false'; ?>" aria-label="<?= !empty($post['liked_by_viewer']) ? 'Unlike post' : 'Like post'; ?>">
-          <?php elseif (!empty($post['is_real'])): ?>
-            <a class="like-btn" href="login.php" aria-label="Log in to like this post">
           <?php else: ?>
-            <button type="button" class="like-btn" data-likes="<?= $post['likes']; ?>">
+            <a class="like-btn" href="login.php" aria-label="Log in to like this post">
           <?php endif; ?>
               <svg class="like-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
               <span class="like-count"><?= $post['likes']; ?></span>
               <span class="like-label"><?= !empty($post['liked_by_viewer']) ? 'Liked' : 'Like'; ?></span>
-          <?php if (!empty($post['is_real']) && !Auth::check()): ?>
+          <?php if (!Auth::check()): ?>
             </a>
           <?php else: ?>
             </button>
@@ -347,7 +330,7 @@ include __DIR__ . '/includes/header.php';
         <?php endif; ?>
         <span>&#128172; <?= count($post_comments); ?> comments</span>
         <span><?= $post['hot'] ? '&#128293; trending' : 'in the feed'; ?></span>
-        <?php if (!empty($post['is_real']) && !$isOwner): ?>
+        <?php if (!$isOwner): ?>
           <button type="button" class="icon-flag" data-report-type="post" data-report-id="<?= (int) $post['id']; ?>" data-report-target="@<?= htmlspecialchars($post['username']); ?>'s post" title="Report post" aria-label="Report post" style="margin-left:auto;">&#128681; Report</button>
         <?php endif; ?>
       </div>
@@ -377,29 +360,19 @@ include __DIR__ . '/includes/header.php';
           <?php else: ?>
             <?php foreach ($post_comments as $commentIndex => $c): ?>
               <div class="thread-item">
-                <?php if (!empty($c['user_id'])): ?>
-                  <a class="comment-author-avatar" href="profile.php?id=<?= (int) $c['user_id']; ?>" aria-label="View @<?= htmlspecialchars($c['username']); ?>'s profile">
-                    <img src="<?= htmlspecialchars($c['avatar_url']); ?>" alt="">
-                  </a>
-                <?php else: ?>
-                  <img src="<?= htmlspecialchars($c['avatar_url']); ?>" alt="<?= htmlspecialchars($c['username']); ?>">
-                <?php endif; ?>
+                <a class="comment-author-avatar" href="profile.php?id=<?= (int) $c['user_id']; ?>" aria-label="View @<?= htmlspecialchars($c['username']); ?>'s profile">
+                  <img src="<?= htmlspecialchars($c['avatar_url']); ?>" alt="">
+                </a>
                 <div class="thread-item-content">
-                  <?php if (!empty($c['user_id'])): ?>
-                    <a class="who comment-author-name" href="profile.php?id=<?= (int) $c['user_id']; ?>">@<?= htmlspecialchars($c['username']); ?></a>
-                  <?php else: ?>
-                    <span class="who">@<?= htmlspecialchars($c['username']); ?></span>
-                  <?php endif; ?>
+                  <a class="who comment-author-name" href="profile.php?id=<?= (int) $c['user_id']; ?>">@<?= htmlspecialchars($c['username']); ?></a>
                   <time><?= $c['time']; ?></time>
                   <?php if (
-                      !empty($post['is_real'])
-                      && (!Auth::check() || (int) $c['user_id'] !== (int) Auth::user()['id'])
+                      !Auth::check() || (int) $c['user_id'] !== (int) Auth::user()['id']
                   ): ?>
                     <button type="button" class="icon-flag icon-flag--inline" data-report-type="comment" data-report-id="<?= (int) $c['id']; ?>" data-report-target="@<?= htmlspecialchars($c['username']); ?>'s comment" title="Report comment" aria-label="Report comment">&#128681;</button>
                   <?php endif; ?>
                   <?php if (
-                      !empty($post['is_real'])
-                      && Auth::check()
+                      Auth::check()
                       && (int) $c['user_id'] === (int) Auth::user()['id']
                       && $editingCommentId === (int) $c['id']
                   ): ?>
@@ -418,7 +391,7 @@ include __DIR__ . '/includes/header.php';
                     <p class="comment-text" id="commentText<?= $commentIndex; ?>"><?= htmlspecialchars($c['text']); ?></p>
                     <button class="comment-toggle" type="button" aria-controls="commentText<?= $commentIndex; ?>" aria-expanded="false" hidden>Show more</button>
                   <?php endif; ?>
-                  <?php if (!empty($post['is_real']) && Auth::check() && (int) $c['user_id'] === (int) Auth::user()['id']): ?>
+                  <?php if (Auth::check() && (int) $c['user_id'] === (int) Auth::user()['id']): ?>
                     <?php if ($editingCommentId !== (int) $c['id']): ?>
                       <div class="comment-actions">
                         <a class="comment-action" href="post.php?id=<?= $post['id']; ?>&amp;edit_comment=<?= (int) $c['id']; ?>#comments">Edit</a>
@@ -437,7 +410,7 @@ include __DIR__ . '/includes/header.php';
           <?php endif; ?>
         </div>
 
-        <?php if (!empty($post['is_real']) && Auth::check()): ?>
+        <?php if (Auth::check()): ?>
           <form class="comment-form" method="post" action="post.php?id=<?= $post['id']; ?>#comments">
             <?= Csrf::field(); ?>
             <input type="hidden" name="action" value="comment">
@@ -446,10 +419,8 @@ include __DIR__ . '/includes/header.php';
             <button type="submit" class="btn btn-solid">Post</button>
           </form>
           <p class="field-hint" style="margin-top:8px;">Up to 500 characters.</p>
-        <?php elseif (!empty($post['is_real'])): ?>
-          <p class="field-hint"><a href="login.php">Log in</a> to leave a comment.</p>
         <?php else: ?>
-          <p class="field-hint">Comments can be added to live posts.</p>
+          <p class="field-hint"><a href="login.php">Log in</a> to leave a comment.</p>
         <?php endif; ?>
       </div>
     </div>

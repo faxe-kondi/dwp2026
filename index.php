@@ -2,13 +2,15 @@
 require_once __DIR__ . '/includes/Auth.php';
 Auth::boot();
 require_once __DIR__ . '/includes/Post.php';
-require __DIR__ . '/includes/data.php';
 require __DIR__ . '/includes/helpers.php';
 $currentUser = Auth::user();
 $viewerId = $currentUser ? (int) $currentUser['id'] : null;
 $hot_posts = array_map('ds_post_view', Post::findHot($viewerId));
 $newest_posts = array_map('ds_post_view', Post::findNewest($viewerId));
 $pinned_posts = array_map('ds_post_view', Post::findFrontPinned($viewerId));
+$heroPost = $newest_posts[0] ?? null;
+$heroImage = $heroPost ? ds_post_image_url($heroPost) : 'uploads/posts/placeholder1.webp';
+$heroAlt = $heroPost ? $heroPost['title'] : 'DEADSTOCK post';
 $active = 'home';
 $page_title = 'Home';
 include __DIR__ . '/includes/header.php';
@@ -34,7 +36,7 @@ include __DIR__ . '/includes/header.php';
         <span class="big">DEAD<br>STOCK</span>
         <span class="small">CERTIFIED</span>
       </div>
-      <img src="<?= ds_photo_url('ds-hero-1', 700, 875); ?>" alt="Featured streetwear fit">
+      <img src="<?= htmlspecialchars($heroImage); ?>" alt="<?= htmlspecialchars($heroAlt); ?>">
       <div class="hang-tag">
         <span class="tag-hole"></span>
         <dl>

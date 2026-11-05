@@ -25,9 +25,7 @@ function ds_profile_view(array $user, int $postCount): array {
 }
 
 function ds_user_card($u, $index = 0, $context = 'following') {
-  $avatar = isset($u['avatar'])
-    ? ds_user_avatar_url($u, 140)
-    : ds_avatar_url($u['avatar_seed'], 140);
+  $avatar = ds_user_avatar_url($u, 140);
   ?>
   <article class="user-card reveal"<?= $context === 'following' ? ' data-following-card' : ($context === 'blocked' ? ' data-blocked-card' : ''); ?>>
     <div class="user-card-inner">
