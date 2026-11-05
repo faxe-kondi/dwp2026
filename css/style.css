@@ -421,20 +421,22 @@ html { scrollbar-color: var(--ink) var(--bone); scrollbar-width: thin; }
 .footer-cols a:hover { color: var(--hazard); }
 .footer-bottom { border-top: 1px solid var(--panel-line); margin-top: 40px; padding-top: 20px; }
 .footer-bottom .wrap { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--steel); }
+.footer-contact p { max-width: 260px; color: var(--bone-dim); font-size: 14px; overflow-wrap: anywhere; }
 
 /* ---------- about page ---------- */
 .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; }
 @media (max-width: 800px) { .about-grid { grid-template-columns: 1fr; } }
 .about-grid img { border: 1px solid #D8D3C4; }
 .about-copy p { margin-bottom: 18px; color: #3A3A38; max-width: 56ch; }
+.about-section + .about-section { margin-top: 38px; }
+.about-section h2 { font-size: 24px; margin-bottom: 18px; }
+.about-copy .about-empty { color: var(--steel); font-style: italic; }
+.about-rules ol { list-style: none; counter-reset: community-rule; border-top: 1px solid #DEDACD; }
+.about-rules li { counter-increment: community-rule; display: grid; grid-template-columns: 48px 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid #DEDACD; color: #3A3A38; }
+.about-rules li::before { content: counter(community-rule, decimal-leading-zero); font-family: 'IBM Plex Mono', monospace; color: var(--hazard); }
 .stat-row { display: flex; gap: 34px; margin-top: 30px; flex-wrap: wrap; }
 .stat-row div b { display: block; font-family: 'Anton', sans-serif; font-size: 34px; }
 .stat-row div span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--steel); }
-.value-list { margin-top: 36px; border-top: 1px solid #DEDACD; }
-.value-list .row { display: grid; grid-template-columns: 90px 1fr; gap: 20px; padding: 20px 0; border-bottom: 1px solid #DEDACD; }
-.value-list .row .num { font-family: 'IBM Plex Mono', monospace; color: var(--hazard); font-size: 14px; }
-.value-list .row h3 { font-size: 20px; margin-bottom: 6px; }
-.value-list .row p { color: #3A3A38; font-size: 14.5px; }
 
 /* ---------- single post page ---------- */
 .post-layout { display: grid; grid-template-columns: 1.2fr 0.9fr; gap: 48px; align-items: start; }

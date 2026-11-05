@@ -1,8 +1,12 @@
+<?php
+require_once __DIR__ . '/SiteSettings.php';
+$footerContact = trim(SiteSettings::get('contact'));
+?>
 <footer class="site-footer">
   <div class="wrap">
     <div class="footer-brand">
       <a href="index.php" class="brand">DEAD<span>STOCK</span></a>
-      <p>A place to post the fit, the find, and the fight to get it. Built by students, for the racks nobody else is checking.</p>
+      <p>A community for sharing the finds, fits, and stories worth passing on.</p>
     </div>
     <div class="footer-cols">
       <div>
@@ -10,6 +14,7 @@
         <ul>
           <li><a href="index.php">Home</a></li>
           <li><a href="browse.php">Browse</a></li>
+          <li><a href="search.php">Search</a></li>
           <li><a href="about.php">About</a></li>
         </ul>
       </div>
@@ -22,21 +27,22 @@
           <li><a href="liked.php">Your likes</a></li>
           <li><a href="following.php">Following</a></li>
           <li><a href="blocked.php">Blocked users</a></li>
+          <li><a href="settings.php">Settings</a></li>
+          <li><a href="logout.php">Log out</a></li>
         </ul>
       </div>
       <?php endif; ?>
-      <div>
-        <h4>PROJECT</h4>
-        <ul>
-          <li><a href="#">School prototype</a></li>
-          <li><a href="#">v0.1 — hardcoded</a></li>
-        </ul>
-      </div>
+      <?php if ($footerContact !== ''): ?>
+        <div class="footer-contact">
+          <h4>CONTACT</h4>
+          <p><?= nl2br(htmlspecialchars($footerContact)); ?></p>
+        </div>
+      <?php endif; ?>
     </div>
   </div>
   <div class="footer-bottom">
     <div class="wrap">
-      DEADSTOCK &mdash; class project prototype. no real accounts, uploads, or data.
+      DEADSTOCK &mdash; Share your finds. Respect the community.
     </div>
   </div>
 </footer>
