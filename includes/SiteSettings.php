@@ -20,6 +20,14 @@ class SiteSettings
         return (string) (self::$settings[$key] ?? '');
     }
 
+    public static function getColor(string $key, string $fallback): string
+    {
+        $color = self::get($key);
+        return preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $color)
+            ? $color
+            : $fallback;
+    }
+
     public static function getAboutStats(): array
     {
         $stmt = Database::connect()->query(
