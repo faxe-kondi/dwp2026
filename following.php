@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/includes/profile-bootstrap.php';
+$following_users = User::findFollowing((int) $viewer['id']);
 $active = 'profile';
 $page_title = 'Following';
 include __DIR__ . '/includes/header.php';
@@ -12,11 +13,11 @@ include __DIR__ . '/includes/header.php';
 
     <?php $profile_tab = 'following'; include __DIR__ . '/includes/profile-header.php'; ?>
 
-    <?php if (empty($demo_following)): ?>
+    <?php if (empty($following_users)): ?>
       <div class="empty-state">Not following anyone yet.</div>
     <?php else: ?>
       <div class="user-grid">
-        <?php foreach ($demo_following as $i => $u) ds_user_card($u, $i, 'following'); ?>
+        <?php foreach ($following_users as $i => $u) ds_user_card($u, $i, 'following'); ?>
       </div>
     <?php endif; ?>
 

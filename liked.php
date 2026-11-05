@@ -1,7 +1,8 @@
 <?php
 require __DIR__ . '/includes/profile-bootstrap.php';
 
-$liked_posts = array_values(array_filter($demo_posts, fn($p) => in_array($p['id'], $demo_liked_post_ids, true)));
+$real_liked_posts = array_map('ds_post_view', Post::findLikedByUser((int) Auth::user()['id']));
+$liked_posts = $real_liked_posts;
 
 $active = 'profile';
 $page_title = 'Your Likes';
@@ -19,7 +20,7 @@ include __DIR__ . '/includes/header.php';
       <div class="empty-state">No likes yet &mdash; go heart a few fits.</div>
     <?php else: ?>
       <div class="photo-grid">
-        <?php foreach ($liked_posts as $p) ds_photo_card($p, true); ?>
+        <?php foreach ($liked_posts as $p) ds_photo_card($p); ?>
       </div>
     <?php endif; ?>
 

@@ -1,5 +1,49 @@
 <?php
-require __DIR__ . '/includes/profile-bootstrap.php';
+require_once __DIR__ . '/includes/Auth.php';
+Auth::boot();
+require_once __DIR__ . '/includes/Csrf.php';
+require_once __DIR__ . '/includes/User.php';
+require_once __DIR__ . '/includes/Post.php';
+require_once __DIR__ . '/includes/helpers.php';
+
+$requestedUserId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+$isOwnProfile = $requestedUserId === false
+    || $requestedUserId === null
+    || $requestedUserId < 1
+    || (Auth::check() && $requestedUserId === (int) Auth::user()['id']);
+
+if ($isOwnProfile) {
+    Auth::requireLogin();
+    $viewer = User::find((int) Auth::user()['id']);
+} else {
+    $viewer = User::find($requestedUserId);
+}
+
+if (!$viewer) {
+    if ($isOwnProfile) {
+        Auth::logout();
+        header('Location: login.php');
+        exit;
+    }
+
+    http_response_code(404);
+    exit('Profile not found.');
+}
+
+$blockState = Auth::check() && !$isOwnProfile
+    ? User::getBlockState((int) Auth::user()['id'], (int) $viewer['id'])
+    : ['blocked_by_viewer' => false, 'blocked_viewer' => false];
+$profileBlocked = $blockState['blocked_by_viewer'] || $blockState['blocked_viewer'];
+$user_posts = $profileBlocked
+    ? []
+    : array_map('ds_post_view', Post::findByUser((int) $viewer['id']));
+usort($user_posts, fn($a, $b) => ($b['pinned'] <=> $a['pinned']));
+$profile = ds_profile_view($viewer, count($user_posts));
+$isFollowingProfile = Auth::check()
+    && !$isOwnProfile
+    && !$profileBlocked
+    && User::isFollowing((int) Auth::user()['id'], (int) $viewer['id']);
+
 $active = 'profile';
 $page_title = $profile['display_name'];
 include __DIR__ . '/includes/header.php';
@@ -12,7 +56,30 @@ include __DIR__ . '/includes/header.php';
 
     <?php $profile_tab = 'posts'; include __DIR__ . '/includes/profile-header.php'; ?>
 
-    <?php if (empty($user_posts)): ?>
+    <?php if (isset($_GET['post_deleted']) && $_GET['post_deleted'] === '1'): ?>
+      <?php if (isset($_GET['cleanup_failed']) && $_GET['cleanup_failed'] === '1'): ?>
+        <div class="form-errors"><ul><li>The post was deleted, but its uploaded image could not be removed.</li></ul></div>
+      <?php else: ?>
+        <div class="form-success">Post deleted.</div>
+      <?php endif; ?>
+    <?php endif; ?>
+
+    <?php if (!$isOwnProfile && $blockState['blocked_by_viewer']): ?>
+      <div class="empty-state profile-blocked-state">
+        <p>You blocked this user. Unblock them to see their content.</p>
+        <button
+          type="button"
+          class="btn unblock-btn"
+          data-block-url="includes/block.php"
+          data-user-id="<?= (int) $viewer['id']; ?>"
+          data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
+          data-blocked="true"
+          data-unblock-label="@<?= htmlspecialchars($profile['username']); ?>"
+        >Unblock user</button>
+      </div>
+    <?php elseif (!$isOwnProfile && $blockState['blocked_viewer']): ?>
+      <div class="empty-state profile-blocked-state">You can't see this user's content.</div>
+    <?php elseif (empty($user_posts)): ?>
       <div class="empty-state">No posts yet.</div>
     <?php else: ?>
       <div class="photo-grid">
