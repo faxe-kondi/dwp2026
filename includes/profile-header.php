@@ -75,10 +75,14 @@ if (!isset($profile_tab)) { $profile_tab = 'posts'; }
   <span><?= htmlspecialchars($profile['joined']); ?></span>
 </div>
 
-<div class="profile-stats">
+<div
+  class="profile-stats"
+  data-profile-user-id="<?= (int) $viewer['id']; ?>"
+  data-viewer-user-id="<?= Auth::check() ? (int) Auth::user()['id'] : ''; ?>"
+>
   <div><b><?= $profile['stats']['posts']; ?></b><span>POSTS</span></div>
-  <div><b><?= $profile['stats']['followers']; ?></b><span>FOLLOWERS</span></div>
-  <div><b><?= $profile['stats']['following']; ?></b><span>FOLLOWING</span></div>
+  <div><b data-profile-stat="followers"><?= $profile['stats']['followers']; ?></b><span>FOLLOWERS</span></div>
+  <div><b data-profile-stat="following"><?= $profile['stats']['following']; ?></b><span>FOLLOWING</span></div>
 </div>
 
 <div class="profile-tabs">

@@ -203,6 +203,19 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.classList.toggle('following', data.following);
         btn.setAttribute('data-following', data.following ? 'true' : 'false');
         btn.setAttribute('aria-pressed', data.following ? 'true' : 'false');
+        var profileStats = document.querySelector('.profile-stats');
+        if (profileStats) {
+          var profileUserId = profileStats.getAttribute('data-profile-user-id');
+          var targetUserId = btn.getAttribute('data-user-id');
+          var viewerUserId = profileStats.getAttribute('data-viewer-user-id');
+          if (profileUserId === targetUserId && data.profile_counts) {
+            profileStats.querySelector('[data-profile-stat="followers"]').textContent = data.profile_counts.followers;
+            profileStats.querySelector('[data-profile-stat="following"]').textContent = data.profile_counts.following;
+          }
+          if (profileUserId === viewerUserId && data.viewer_counts) {
+            profileStats.querySelector('[data-profile-stat="following"]').textContent = data.viewer_counts.following;
+          }
+        }
         updateFollowLabel(btn.matches(':hover') || btn.matches(':focus'));
       }).catch(function (error) {
         showToast(error.message);

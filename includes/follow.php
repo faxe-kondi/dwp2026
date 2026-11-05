@@ -50,7 +50,12 @@ try {
         exit;
     }
 
-    echo json_encode(['following' => $result]);
+    $followerId = (int) Auth::user()['id'];
+    echo json_encode([
+        'following' => $result,
+        'profile_counts' => User::getFollowCounts($followingId),
+        'viewer_counts' => User::getFollowCounts($followerId),
+    ]);
 } catch (DomainException $e) {
     http_response_code(403);
     echo json_encode([
