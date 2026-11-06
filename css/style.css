@@ -686,6 +686,7 @@ html.js-ready .reveal.in-view { opacity: 1; transform: translateY(0); }
 }
 .action-menu.open .action-menu-list { display: flex; }
 .action-menu-list form { margin: 0; }
+.moderation-form input[type="text"] { width: calc(100% - 20px); margin: 8px 10px 0; padding: 8px; border: 1px solid var(--panel-line); background: var(--panel); color: var(--bone); font: inherit; font-size: 12px; }
 .action-menu-item {
   display: block;
   width: 100%;

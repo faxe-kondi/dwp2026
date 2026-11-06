@@ -146,4 +146,14 @@ class Comment
         $stmt->execute([$commentId, $postId, $userId]);
         return $stmt->rowCount() === 1;
     }
+
+    public static function deleteByModerator(int $commentId, int $postId): bool
+    {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare(
+            'DELETE FROM comments WHERE id = ? AND post_id = ?'
+        );
+        $stmt->execute([$commentId, $postId]);
+        return $stmt->rowCount() === 1;
+    }
 }

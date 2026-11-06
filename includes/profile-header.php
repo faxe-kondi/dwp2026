@@ -57,6 +57,24 @@ if (!isset($profile_tab)) { $profile_tab = 'posts'; }
           <?php if (Auth::check()): ?>
             <button type="button" class="action-menu-item action-menu-item--danger" data-block-url="includes/block.php" data-user-id="<?= (int) $viewer['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="false" data-block-label="@<?= htmlspecialchars($profile['username']); ?>">Block user</button>
           <?php endif; ?>
+          <?php if (!empty($canManageProfile)): ?>
+            <?php if ($viewer['is_banned']): ?>
+              <form method="post" action="includes/moderate-user.php" onsubmit="return confirm('Unban @<?= htmlspecialchars($profile['username'], ENT_QUOTES); ?>?');">
+                <?= Csrf::field(); ?>
+                <input type="hidden" name="user_id" value="<?= (int) $viewer['id']; ?>">
+                <input type="hidden" name="action" value="unban">
+                <button type="submit" class="action-menu-item">Unban user</button>
+              </form>
+            <?php else: ?>
+              <button
+                type="button"
+                class="action-menu-item action-menu-item--danger"
+                data-ban-user
+                data-user-id="<?= (int) $viewer['id']; ?>"
+                data-username="<?= htmlspecialchars($profile['username']); ?>"
+              >Ban user</button>
+            <?php endif; ?>
+          <?php endif; ?>
         </div>
       </div>
       <?php endif; ?>

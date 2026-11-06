@@ -352,6 +352,32 @@ class Post
         }
     }
 
+    public static function deleteByModerator(int $id): ?string
+    {
+        $pdo = Database::connect();
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare('SELECT filename FROM posts WHERE id = ? FOR UPDATE');
+            $stmt->execute([$id]);
+            $filename = $stmt->fetchColumn();
+            if ($filename === false) {
+                $pdo->rollBack();
+                return null;
+            }
+
+            $stmt = $pdo->prepare('DELETE FROM posts WHERE id = ?');
+            $stmt->execute([$id]);
+            $pdo->commit();
+            return $filename;
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     public static function toggleLike(int $postId, int $userId): ?array
     {
         $pdo = Database::connect();

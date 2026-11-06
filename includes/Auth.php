@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/Session.php';
+require_once __DIR__ . '/../db.php';
 class Auth
 {
     private static ?array $currentUser = null;
@@ -15,11 +16,28 @@ class Auth
         Session::start();
 
         if (!empty($_SESSION['user_id'])) {
+            $stmt = Database::connect()->prepare(
+                'SELECT users.id, users.username, users.is_banned, roles.name AS role
+                 FROM users
+                 JOIN roles ON roles.id = users.role_id
+                 WHERE users.id = ?
+                 LIMIT 1'
+            );
+            $stmt->execute([(int) $_SESSION['user_id']]);
+            $user = $stmt->fetch();
+
+            if (!$user || $user['is_banned']) {
+                self::logout();
+                return;
+            }
+
             self::$currentUser = [
-                'id'       => $_SESSION['user_id'],
-                'username' => $_SESSION['username'] ?? null,
-                'role'     => $_SESSION['role'] ?? 'user',
+                'id'       => (int) $user['id'],
+                'username' => $user['username'],
+                'role'     => $user['role'],
             ];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = $user['role'];
         }
     }
 
@@ -41,6 +59,11 @@ class Auth
     public static function role(): ?string
     {
         return self::$currentUser['role'] ?? null;
+    }
+
+    public static function canModerate(): bool
+    {
+        return in_array(self::role(), ['owner', 'moderator'], true);
     }
 
     public static function login(array $userRow): void

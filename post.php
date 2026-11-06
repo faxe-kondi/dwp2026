@@ -73,13 +73,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     Csrf::verifyOrFail();
     $currentUser = Auth::user();
 
-    if (!$currentUser || (int) $realRow['user_id'] !== (int) $currentUser['id']) {
+    $isPostOwner = $currentUser
+        && (int) $realRow['user_id'] === (int) $currentUser['id'];
+    if (!$isPostOwner && !Auth::canModerate()) {
         http_response_code(404);
         exit('Post not found.');
     }
 
     try {
-        $deletedFilename = Post::deleteOwned($id, (int) $currentUser['id']);
+        $deletedFilename = $isPostOwner
+            ? Post::deleteOwned($id, (int) $currentUser['id'])
+            : Post::deleteByModerator($id);
     } catch (PDOException $e) {
         error_log('Post deletion failed: ' . $e->getMessage());
         http_response_code(500);
@@ -91,13 +95,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     }
 
     $imagePath = __DIR__ . '/uploads/posts/' . basename($deletedFilename);
+    $profileUrl = 'profile.php?id=' . (int) $realRow['user_id'] . '&post_deleted=1';
     if (basename($deletedFilename) !== $deletedFilename || (is_file($imagePath) && !unlink($imagePath))) {
         error_log('Post image cleanup failed after deleting post #' . $id . '.');
-        header('Location: profile.php?post_deleted=1&cleanup_failed=1');
+        header('Location: ' . $profileUrl . '&cleanup_failed=1');
         exit;
     }
 
-    header('Location: profile.php?post_deleted=1');
+    header('Location: ' . $profileUrl);
     exit;
 }
 
@@ -171,7 +176,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     }
 
     try {
-        if (!Comment::deleteOwned($commentId, (int) $realRow['id'], (int) Auth::user()['id'])) {
+        $deleted = Auth::canModerate()
+            ? Comment::deleteByModerator($commentId, (int) $realRow['id'])
+            : Comment::deleteOwned($commentId, (int) $realRow['id'], (int) $currentUser['id']);
+        if (!$deleted) {
             http_response_code(404);
             exit('Comment not found.');
         }
@@ -189,6 +197,7 @@ $post = ds_post_view($realRow);
 
 $isOwner = $currentUser
     && (int) $realRow['user_id'] === (int) $currentUser['id'];
+$canDeletePost = $isOwner || Auth::canModerate();
 $isFollowingPoster = $currentUser
     && !$isOwner
     && !$postBlockedForViewer
@@ -276,12 +285,14 @@ include __DIR__ . '/includes/header.php';
         <div class="action-menu">
           <button class="action-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="uploaderMenu" aria-label="<?= $isOwner ? 'Post options' : 'More options for @' . htmlspecialchars($post['username']); ?>">&#8942;</button>
           <div class="action-menu-list" id="uploaderMenu">
-            <?php if ($isOwner): ?>
-              <a class="action-menu-item" href="edit-post.php?id=<?= $post['id']; ?>">Edit post</a>
+            <?php if ($canDeletePost): ?>
+              <?php if ($isOwner): ?>
+                <a class="action-menu-item" href="edit-post.php?id=<?= $post['id']; ?>">Edit post</a>
+              <?php endif; ?>
               <form method="post" action="post.php?id=<?= $post['id']; ?>" onsubmit="return confirm('Delete this post? This cannot be undone.');">
                 <?= Csrf::field(); ?>
                 <input type="hidden" name="action" value="delete">
-                <button type="submit" class="action-menu-item action-menu-item--danger">Delete post</button>
+                <button type="submit" class="action-menu-item action-menu-item--danger"><?= $isOwner ? 'Delete post' : 'Remove post'; ?></button>
               </form>
             <?php else: ?>
               <button type="button" class="action-menu-item" data-report-type="user" data-report-id="<?= (int) $realRow['user_id']; ?>" data-report-target="@<?= htmlspecialchars($post['username']); ?>">Report user</button>
@@ -391,18 +402,23 @@ include __DIR__ . '/includes/header.php';
                     <p class="comment-text" id="commentText<?= $commentIndex; ?>"><?= htmlspecialchars($c['text']); ?></p>
                     <button class="comment-toggle" type="button" aria-controls="commentText<?= $commentIndex; ?>" aria-expanded="false" hidden>Show more</button>
                   <?php endif; ?>
-                  <?php if (Auth::check() && (int) $c['user_id'] === (int) Auth::user()['id']): ?>
-                    <?php if ($editingCommentId !== (int) $c['id']): ?>
+                  <?php
+                    $isOwnComment = Auth::check()
+                        && (int) $c['user_id'] === (int) Auth::user()['id'];
+                    $canDeleteComment = $isOwnComment || Auth::canModerate();
+                  ?>
+                  <?php if ($canDeleteComment && $editingCommentId !== (int) $c['id']): ?>
                       <div class="comment-actions">
-                        <a class="comment-action" href="post.php?id=<?= $post['id']; ?>&amp;edit_comment=<?= (int) $c['id']; ?>#comments">Edit</a>
-                        <form class="comment-delete-form" method="post" action="post.php?id=<?= $post['id']; ?>#comments" onsubmit="return confirm('Delete your comment?');">
+                        <?php if ($isOwnComment): ?>
+                          <a class="comment-action" href="post.php?id=<?= $post['id']; ?>&amp;edit_comment=<?= (int) $c['id']; ?>#comments">Edit</a>
+                        <?php endif; ?>
+                        <form class="comment-delete-form" method="post" action="post.php?id=<?= $post['id']; ?>#comments" onsubmit="return confirm('Delete this comment?');">
                           <?= Csrf::field(); ?>
                           <input type="hidden" name="action" value="delete_comment">
                           <input type="hidden" name="comment_id" value="<?= (int) $c['id']; ?>">
-                          <button class="comment-action comment-delete" type="submit">Delete</button>
+                          <button class="comment-action comment-delete" type="submit"><?= $isOwnComment ? 'Delete' : 'Remove'; ?></button>
                         </form>
                       </div>
-                    <?php endif; ?>
                   <?php endif; ?>
                 </div>
               </div>

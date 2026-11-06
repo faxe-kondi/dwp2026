@@ -8,9 +8,11 @@ class User
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
             'SELECT users.id, users.username, users.bio, users.avatar, users.created_at,
+                    users.is_banned, roles.name AS role,
                     (SELECT COUNT(*) FROM follows WHERE follows.following_id = users.id) AS follower_count,
                     (SELECT COUNT(*) FROM follows WHERE follows.follower_id = users.id) AS following_count
              FROM users
+             JOIN roles ON roles.id = users.role_id
              WHERE users.id = ?
              LIMIT 1'
         );

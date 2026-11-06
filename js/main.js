@@ -514,6 +514,46 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // ---------- ban user modal ----------
+  var banUserModal = document.getElementById('banUserModal');
+  var banUserForm = document.getElementById('banUserForm');
+  var banUserModalSub = document.getElementById('banUserModalSub');
+
+  function closeBanUserModal() {
+    if (banUserModal && typeof banUserModal.close === 'function' && banUserModal.open) {
+      banUserModal.close();
+    }
+  }
+
+  document.querySelectorAll('[data-ban-user]').forEach(function (button) {
+    button.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllActionMenus();
+      if (!banUserModal || !banUserForm) return;
+
+      banUserForm.reset();
+      banUserForm.elements.namedItem('user_id').value = button.getAttribute('data-user-id');
+      banUserModalSub.textContent = 'Ban @' + button.getAttribute('data-username') + '?';
+      if (typeof banUserModal.showModal === 'function' && !banUserModal.open) {
+        banUserModal.showModal();
+      }
+    });
+  });
+
+  ['banUserModalClose', 'banUserModalCancel'].forEach(function (id) {
+    var button = document.getElementById(id);
+    if (button) button.addEventListener('click', closeBanUserModal);
+  });
+
+  if (banUserModal) {
+    banUserModal.addEventListener('click', function (e) {
+      if (e.target === banUserModal) {
+        closeBanUserModal();
+      }
+    });
+  }
+
   // ---------- block / unblock ----------
   document.querySelectorAll('[data-block-url]').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
