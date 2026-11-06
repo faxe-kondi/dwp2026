@@ -87,16 +87,6 @@ INSERT INTO report_reasons (id, name) VALUES
     (4, 'Inappropriate content'),
     (5, 'Other');
 
-CREATE TABLE report_statuses (
-    id      INT         NOT NULL PRIMARY KEY,
-    name    VARCHAR(20) NOT NULL UNIQUE
-);
-INSERT INTO report_statuses (id, name) VALUES
-    (1, 'pending'),
-    (2, 'reviewed'),
-    (3, 'dismissed'),
-    (4, 'actioned');
-
 CREATE TABLE reports (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     reporter_id     INT          NULL,
@@ -105,7 +95,6 @@ CREATE TABLE reports (
     target_comment_id INT        NULL,
     reason_id       INT          NOT NULL,
     details         TEXT         NULL,
-    status_id       INT          NOT NULL DEFAULT 1,
     created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_reports_single_target CHECK (
         (target_user_id IS NOT NULL)
@@ -115,10 +104,17 @@ CREATE TABLE reports (
     CONSTRAINT fk_reports_reporter
     FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (reason_id) REFERENCES report_reasons(id),
-    FOREIGN KEY (status_id) REFERENCES report_statuses(id),
     FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (target_post_id) REFERENCES posts(id) ON DELETE CASCADE,
     FOREIGN KEY (target_comment_id) REFERENCES comments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE moderation_report_checks (
+    user_id         INT         NOT NULL,
+    category        VARCHAR(20) NOT NULL,
+    last_checked_at DATETIME    NOT NULL,
+    PRIMARY KEY (user_id, category),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE site_settings (

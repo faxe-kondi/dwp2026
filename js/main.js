@@ -518,6 +518,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var banUserModal = document.getElementById('banUserModal');
   var banUserForm = document.getElementById('banUserForm');
   var banUserModalSub = document.getElementById('banUserModalSub');
+  var banUserModalSubmit = document.getElementById('banUserModalSubmit');
 
   function closeBanUserModal() {
     if (banUserModal && typeof banUserModal.close === 'function' && banUserModal.open) {
@@ -534,7 +535,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
       banUserForm.reset();
       banUserForm.elements.namedItem('user_id').value = button.getAttribute('data-user-id');
-      banUserModalSub.textContent = 'Ban @' + button.getAttribute('data-username') + '?';
+      var username = button.getAttribute('data-username');
+      var resolvesReports = button.getAttribute('data-resolve-reports') === 'true';
+      var isAlreadyBanned = button.getAttribute('data-user-banned') === 'true';
+      banUserForm.action = resolvesReports ? 'includes/moderate-report.php' : 'includes/moderate-user.php';
+      if (resolvesReports) {
+        banUserForm.elements.namedItem('type').value = 'users';
+        banUserForm.elements.namedItem('id').value = button.getAttribute('data-user-id');
+        banUserModalSub.textContent = isAlreadyBanned
+          ? 'Keep @' + username + ' banned and resolve the pending reports?'
+          : 'Ban @' + username + ' and resolve the pending reports?';
+        banUserModalSubmit.textContent = isAlreadyBanned ? 'Keep banned and resolve reports' : 'Ban and resolve reports';
+      } else {
+        banUserModalSub.textContent = 'Ban @' + username + '?';
+        banUserModalSubmit.textContent = 'Ban user';
+      }
       if (typeof banUserModal.showModal === 'function' && !banUserModal.open) {
         banUserModal.showModal();
       }

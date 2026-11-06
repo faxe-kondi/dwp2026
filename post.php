@@ -370,7 +370,7 @@ include __DIR__ . '/includes/header.php';
             <p class="comments-empty">No comments yet on this post &mdash; be the first.</p>
           <?php else: ?>
             <?php foreach ($post_comments as $commentIndex => $c): ?>
-              <div class="thread-item">
+              <div class="thread-item" id="comment-<?= (int) $c['id']; ?>">
                 <a class="comment-author-avatar" href="profile.php?id=<?= (int) $c['user_id']; ?>" aria-label="View @<?= htmlspecialchars($c['username']); ?>'s profile">
                   <img src="<?= htmlspecialchars($c['avatar_url']); ?>" alt="">
                 </a>

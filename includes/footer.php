@@ -100,6 +100,8 @@ $footerContact = trim(SiteSettings::get('contact'));
     <form id="banUserForm" action="includes/moderate-user.php" method="post">
       <?= Csrf::field(); ?>
       <input type="hidden" name="user_id">
+      <input type="hidden" name="type">
+      <input type="hidden" name="id">
       <input type="hidden" name="action" value="ban">
       <div class="modal-head">
         <h3 id="banUserModalTitle">Ban user</h3>
@@ -114,7 +116,7 @@ $footerContact = trim(SiteSettings::get('contact'));
 
       <div class="modal-actions">
         <button type="button" class="btn" id="banUserModalCancel">Cancel</button>
-        <button type="submit" class="btn btn-solid">Ban user</button>
+        <button type="submit" class="btn btn-solid" id="banUserModalSubmit">Ban user</button>
       </div>
     </form>
   </div>
