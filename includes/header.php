@@ -34,6 +34,9 @@ Auth::boot();
       <li><a href="search.php" class="<?= $active === 'search' ? 'active' : ''; ?>">Search</a></li>
       <li><a href="about.php" class="<?= $active === 'about' ? 'active' : ''; ?>">About</a></li>
       <?php if (Auth::check()): ?>
+        <?php if (Auth::role() === 'owner'): ?>
+          <li><a href="admin.php" class="<?= $active === 'admin' ? 'active' : ''; ?>">Admin</a></li>
+        <?php endif; ?>
         <li><a href="profile.php" class="<?= $active === 'profile' ? 'active' : ''; ?>">Profile</a></li>
         <li><a href="upload.php" class="btn btn-solid <?= $active === 'upload' ? 'active' : ''; ?>" style="padding:9px 16px; font-size:13px;">+ Upload</a></li>
         <li><a href="logout.php" class="<?= $active === 'logout' ? 'active' : ''; ?>">Log Out</a></li>
