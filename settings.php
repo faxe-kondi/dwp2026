@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/includes/profile-bootstrap.php';
 require_once __DIR__ . '/includes/Csrf.php';
+require_once __DIR__ . '/includes/Image.php';
 
 $errors = [];
 $success = false;
@@ -42,19 +43,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $maxBytes = 5 * 1024 * 1024;
             $allowedMimes = [
-                'image/jpeg' => 'jpg',
-                'image/png'  => 'png',
-                'image/webp' => 'webp',
+                'image/jpeg',
+                'image/png',
+                'image/webp',
             ];
 
             if ($_FILES['avatar']['size'] > $maxBytes) {
                 $errors[] = 'Profile picture must be 5MB or smaller.';
             } else {
                 $info = @getimagesize($_FILES['avatar']['tmp_name']);
-                if ($info === false || !isset($allowedMimes[$info['mime']])) {
+                if ($info === false || !in_array($info['mime'], $allowedMimes, true)) {
                     $errors[] = 'Profile picture must be a JPG, PNG, or WEBP image.';
                 } else {
-                    $newAvatarFilename = bin2hex(random_bytes(16)) . '.' . $allowedMimes[$info['mime']];
+                    $newAvatarFilename = bin2hex(random_bytes(16)) . '.webp';
                 }
             }
         }
@@ -63,15 +64,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         $pdo = Database::connect();
         $uploadDir = __DIR__ . '/uploads/avatars/';
+        $newAvatarPath = $newAvatarFilename !== null
+            ? $uploadDir . $newAvatarFilename
+            : null;
 
         try {
             if ($newAvatarFilename !== null) {
                 if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
                     throw new RuntimeException('Could not create the uploads directory.');
                 }
-                if (!move_uploaded_file($_FILES['avatar']['tmp_name'], $uploadDir . $newAvatarFilename)) {
-                    throw new RuntimeException('Could not save the uploaded file.');
-                }
+                PostImage::saveSquare($_FILES['avatar']['tmp_name'], $uploadDir . $newAvatarFilename);
 
                 $stmt = $pdo->prepare('UPDATE users SET username = ?, bio = ?, avatar = ? WHERE id = ?');
                 $stmt->execute([$username, $bio !== '' ? $bio : null, $newAvatarFilename, $viewer['id']]);
@@ -96,13 +98,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $profile = ds_profile_view($viewer, count($user_posts));
             $success = true;
         } catch (PDOException $e) {
+            if ($newAvatarPath !== null && is_file($newAvatarPath) && !unlink($newAvatarPath)) {
+                error_log('Could not remove a staged avatar after the settings update failed.');
+            }
             if ($e->getCode() === '23000') {
                 $errors[] = 'That username was just taken — please try again.';
             } else {
                 error_log('Settings update failed: ' . $e->getMessage());
                 $errors[] = 'Something went wrong saving your changes. Please try again.';
             }
+        } catch (InvalidArgumentException $e) {
+            if ($newAvatarPath !== null && is_file($newAvatarPath) && !unlink($newAvatarPath)) {
+                error_log('Could not remove a staged avatar after image processing failed.');
+            }
+            $errors[] = 'The uploaded profile picture could not be decoded. Please choose another image.';
         } catch (RuntimeException $e) {
+            if ($newAvatarPath !== null && is_file($newAvatarPath) && !unlink($newAvatarPath)) {
+                error_log('Could not remove a staged avatar after image processing failed.');
+            }
             error_log('Avatar upload failed: ' . $e->getMessage());
             $errors[] = 'Something went wrong saving your profile picture. Please try again.';
         }
