@@ -45,6 +45,8 @@ jobs:
             *.sql
             README*
             **/README*
+            uploads/**
+            **/uploads/**
 
           dangerous-clean-slate: false
           log-level: standard
