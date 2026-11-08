@@ -70,7 +70,7 @@ include __DIR__ . '/includes/header.php';
 
     <section class="reported-subject-preview">
       <?php if ($type === 'users'): ?>
-        <a class="reported-subject-link reported-user-preview" href="profile.php?id=<?= (int) $subject['id']; ?>">
+        <a class="reported-subject-link reported-user-preview" href="<?= htmlspecialchars(ds_user_profile_url($subject['username'])); ?>">
           <img src="<?= htmlspecialchars(ds_user_avatar_url($subject, 96)); ?>" alt="">
           <div>
             <h2>@<?= htmlspecialchars($subject['username']); ?></h2>

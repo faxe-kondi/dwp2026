@@ -66,7 +66,7 @@ include __DIR__ . '/includes/header.php';
 
 <header class="page-head">
   <div class="wrap">
-    <div class="crumb"><a href="profile.php">Profile</a> / <a href="post.php?id=<?= $id; ?>">Post #<?= $id; ?></a> / Edit</div>
+    <div class="crumb"><a href="<?= htmlspecialchars(ds_user_profile_url(Auth::user()['username'])); ?>">Profile</a> / <a href="post.php?id=<?= $id; ?>">Post #<?= $id; ?></a> / Edit</div>
     <h1>Edit post</h1>
   </div>
 </header>

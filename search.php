@@ -127,10 +127,10 @@ include __DIR__ . '/includes/header.php';
             <?php foreach ($users as $user): ?>
               <article class="user-card">
                 <div class="user-card-inner">
-                  <a href="profile.php?id=<?= (int) $user['id']; ?>" class="user-card-avatar">
+                  <a href="<?= htmlspecialchars(ds_user_profile_url($user['username'])); ?>" class="user-card-avatar">
                     <img src="<?= htmlspecialchars(ds_user_avatar_url($user, 96)); ?>" alt="<?= htmlspecialchars($user['username']); ?>">
                   </a>
-                  <a href="profile.php?id=<?= (int) $user['id']; ?>" class="user-card-name">@<?= htmlspecialchars($user['username']); ?></a>
+                  <a href="<?= htmlspecialchars(ds_user_profile_url($user['username'])); ?>" class="user-card-name">@<?= htmlspecialchars($user['username']); ?></a>
                   <p class="user-card-bio"><?= htmlspecialchars($user['bio'] ?? ''); ?></p>
                   <div class="user-card-stats">
                     <span><b><?= (int) $user['posts']; ?></b> posts</span>
@@ -149,7 +149,7 @@ include __DIR__ . '/includes/header.php';
             <?php foreach ($comments as $comment): ?>
               <article class="search-comment-result">
                 <a class="search-comment-post-link" href="post.php?id=<?= (int) $comment['post_id']; ?>#comments" aria-label="View comment on <?= htmlspecialchars($comment['title']); ?>"></a>
-                <a class="search-comment-author" href="profile.php?id=<?= (int) $comment['user_id']; ?>">
+                <a class="search-comment-author" href="<?= htmlspecialchars(ds_user_profile_url($comment['username'])); ?>">
                   <img src="<?= htmlspecialchars(ds_user_avatar_url($comment, 48)); ?>" alt="">
                   <span><?= htmlspecialchars($comment['username']); ?></span>
                 </a>

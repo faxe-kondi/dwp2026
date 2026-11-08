@@ -24,15 +24,19 @@ function ds_profile_view(array $user, int $postCount): array {
   ];
 }
 
+function ds_user_profile_url(string $username): string {
+  return '@' . rawurlencode($username);
+}
+
 function ds_user_card($u, $index = 0, $context = 'following') {
   $avatar = ds_user_avatar_url($u, 140);
   ?>
   <article class="user-card reveal"<?= $context === 'following' ? ' data-following-card' : ($context === 'blocked' ? ' data-blocked-card' : ''); ?>>
     <div class="user-card-inner">
-      <a href="profile.php?id=<?= (int) ($u['id'] ?? 0); ?>" class="user-card-avatar">
+      <a href="<?= htmlspecialchars(ds_user_profile_url($u['username'])); ?>" class="user-card-avatar">
         <img src="<?= htmlspecialchars($avatar); ?>" alt="<?= htmlspecialchars($u['username']); ?>">
       </a>
-      <a href="profile.php?id=<?= (int) ($u['id'] ?? 0); ?>" class="user-card-name">@<?= htmlspecialchars($u['username']); ?></a>
+      <a href="<?= htmlspecialchars(ds_user_profile_url($u['username'])); ?>" class="user-card-name">@<?= htmlspecialchars($u['username']); ?></a>
       <p class="user-card-bio"><?= htmlspecialchars($u['bio']); ?></p>
       <div class="user-card-stats">
         <span><b><?= htmlspecialchars((string) $u['posts']); ?></b> posts</span>
