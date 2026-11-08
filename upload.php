@@ -28,6 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     } catch (InvalidArgumentException $e) {
         $errors[] = $e->getMessage();
+    } catch (RateLimitException $e) {
+        $errors[] = $e->getMessage();
     } catch (RuntimeException $e) {
         error_log('Post upload failed: ' . $e->getMessage());
         $errors[] = 'Something went wrong saving your post. Please try again.';

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/Post.php';
 require_once __DIR__ . '/Image.php';
+require_once __DIR__ . '/RateLimiter.php';
 
 class PostService
 {
@@ -84,6 +85,13 @@ class PostService
         self::validateTitle($title);
         self::validateCaption($caption);
         $upload = self::validateUpload($upload, true);
+        $retryAfter = RateLimiter::consume('post_upload', 'user:' . $userId, 5, 3600);
+        if ($retryAfter > 0) {
+            throw new RateLimitException(
+                $retryAfter,
+                'You have uploaded several posts recently. Try again in ' . RateLimiter::formatWait($retryAfter) . '.'
+            );
+        }
         $stagedPath = null;
 
         try {
@@ -111,6 +119,13 @@ class PostService
 
         try {
             if ($upload !== null) {
+                $retryAfter = RateLimiter::consume('post_upload', 'user:' . $userId, 5, 3600);
+                if ($retryAfter > 0) {
+                    throw new RateLimitException(
+                        $retryAfter,
+                        'You have uploaded several images recently. Try again in ' . RateLimiter::formatWait($retryAfter) . '.'
+                    );
+                }
                 [$newFilename, $stagedPath] = self::stageImage($upload);
             }
 

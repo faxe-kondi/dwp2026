@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/RateLimiter.php';
 
 class Comment
 {
@@ -90,6 +91,13 @@ class Comment
     public static function create(int $postId, int $userId, string $content): int
     {
         $content = self::validateContent($content);
+        $retryAfter = RateLimiter::consume('comment', 'user:' . $userId, 10, 600);
+        if ($retryAfter > 0) {
+            throw new RateLimitException(
+                $retryAfter,
+                'You have posted several comments recently. Try again in ' . RateLimiter::formatWait($retryAfter) . '.'
+            );
+        }
 
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
