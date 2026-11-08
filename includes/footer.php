@@ -95,6 +95,33 @@ $footerContact = trim(SiteSettings::get('contact'));
   </div>
 </dialog>
 
+<dialog id="banUserModal" class="modal">
+  <div class="modal-box">
+    <form id="banUserForm" action="includes/moderate-user.php" method="post">
+      <?= Csrf::field(); ?>
+      <input type="hidden" name="user_id">
+      <input type="hidden" name="type">
+      <input type="hidden" name="id">
+      <input type="hidden" name="action" value="ban">
+      <div class="modal-head">
+        <h3 id="banUserModalTitle">Ban user</h3>
+        <button type="button" class="modal-close" id="banUserModalClose" aria-label="Close">&times;</button>
+      </div>
+      <p class="modal-sub" id="banUserModalSub"></p>
+
+      <div class="field" style="margin-bottom:0;">
+        <label for="banUserReason">Ban reason (optional)</label>
+        <input type="text" id="banUserReason" name="reason" maxlength="255" placeholder="Enter a reason">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" id="banUserModalCancel">Cancel</button>
+        <button type="submit" class="btn btn-solid" id="banUserModalSubmit">Ban user</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
 <div class="toast" id="toast" aria-live="polite"></div>
 
 <script src="js/main.js?v=<?= filemtime(__DIR__ . '/../js/main.js'); ?>"></script>

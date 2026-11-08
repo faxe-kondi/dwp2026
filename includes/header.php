@@ -3,6 +3,11 @@ if (!isset($active)) { $active = ''; }
 require_once __DIR__ . '/Auth.php';
 require_once __DIR__ . '/SiteSettings.php';
 Auth::boot();
+$newReportCounts = [];
+if (Auth::canModerate()) {
+    require_once __DIR__ . '/Report.php';
+    $newReportCounts = Report::getUnreadSubjectCounts((int) Auth::user()['id']);
+}
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,6 +39,12 @@ Auth::boot();
       <li><a href="search.php" class="<?= $active === 'search' ? 'active' : ''; ?>">Search</a></li>
       <li><a href="about.php" class="<?= $active === 'about' ? 'active' : ''; ?>">About</a></li>
       <?php if (Auth::check()): ?>
+        <?php if (Auth::canModerate()): ?>
+          <li><a href="reports.php" class="<?= $active === 'reports' ? 'active' : ''; ?>"<?= array_sum($newReportCounts) > 0 ? ' aria-label="Reports, new reports available" title="New reported items"' : ''; ?>>Reports<?php if (array_sum($newReportCounts) > 0): ?> <span class="report-nav-alert" aria-hidden="true">!</span><?php endif; ?></a></li>
+        <?php endif; ?>
+        <?php if (Auth::role() === 'owner'): ?>
+          <li><a href="admin.php" class="<?= $active === 'admin' ? 'active' : ''; ?>">Admin</a></li>
+        <?php endif; ?>
         <li><a href="profile.php" class="<?= $active === 'profile' ? 'active' : ''; ?>">Profile</a></li>
         <li><a href="upload.php" class="btn btn-solid <?= $active === 'upload' ? 'active' : ''; ?>" style="padding:9px 16px; font-size:13px;">+ Upload</a></li>
         <li><a href="logout.php" class="<?= $active === 'logout' ? 'active' : ''; ?>">Log Out</a></li>
