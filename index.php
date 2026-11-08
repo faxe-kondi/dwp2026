@@ -51,7 +51,6 @@ include __DIR__ . '/includes/header.php';
       <div class="hang-tag">
         <span class="tag-hole"></span>
         <dl>
-          <dt>DROP</dt><dd>#118</dd>
           <dt>FEED</dt><dd>LIVE</dd>
           <dt>STATUS</dt><dd>LIVE</dd>
         </dl>
