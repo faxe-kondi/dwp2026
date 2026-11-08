@@ -1,0 +1,50 @@
+name: Deploy Deadstock to live
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy via FTPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to live
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          protocol: ftps
+          port: 21
+
+          local-dir: ./
+          server-dir: ./
+
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/node_modules/**
+            **/db.php
+            db.php
+            **/.env
+            **/.env.*
+            .env
+            .env.*
+            **/*.sql
+            *.sql
+            README*
+            **/README*
+
+          dangerous-clean-slate: false
+          log-level: standard
