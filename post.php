@@ -163,6 +163,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'comme
             exit;
         } catch (InvalidArgumentException $e) {
             $errors[] = $e->getMessage();
+        } catch (RateLimitException $e) {
+            $errors[] = $e->getMessage();
         } catch (PDOException $e) {
             error_log('Comment creation failed: ' . $e->getMessage());
             $errors[] = 'Something went wrong posting your comment. Please try again.';

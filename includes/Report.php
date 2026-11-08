@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/../db.php';
 
+class DuplicatePostReportException extends DomainException
+{
+}
+
 class Report
 {
     private const MODERATION_CATEGORIES = [
@@ -370,11 +374,40 @@ class Report
             throw new DomainException('You cannot report your own content.');
         }
 
-        $stmt = $pdo->prepare(
-            "INSERT INTO reports (reporter_id, {$targetColumn}, reason_id, details)
-             VALUES (?, ?, ?, ?)"
-        );
-        $stmt->execute([$reporterId, $targetId, $reasonId, $details !== '' ? $details : null]);
-        return (int) $pdo->lastInsertId();
+        $pdo->beginTransaction();
+        try {
+            if ($targetType === 'post') {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO report_post_dedup (reporter_id, post_id) VALUES (?, ?)'
+                );
+                try {
+                    $stmt->execute([$reporterId, $targetId]);
+                } catch (PDOException $e) {
+                    if (($e->errorInfo[1] ?? null) === 1062) {
+                        throw new DuplicatePostReportException('You have already reported this post.');
+                    }
+                    throw $e;
+                }
+            }
+
+            $stmt = $pdo->prepare(
+                "INSERT INTO reports (reporter_id, {$targetColumn}, reason_id, details)
+                 VALUES (?, ?, ?, ?)"
+            );
+            $stmt->execute([$reporterId, $targetId, $reasonId, $details !== '' ? $details : null]);
+            $reportId = (int) $pdo->lastInsertId();
+            $pdo->commit();
+            return $reportId;
+        } catch (DuplicatePostReportException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 }

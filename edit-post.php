@@ -53,6 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (PDOException $e) {
         error_log('Post edit failed: ' . $e->getMessage());
         $errors[] = 'Something went wrong saving your changes. Please try again.';
+    } catch (RateLimitException $e) {
+        $errors[] = $e->getMessage();
     } catch (RuntimeException $e) {
         error_log('Post edit failed: ' . $e->getMessage());
         $errors[] = 'Something went wrong saving your changes. Please try again.';

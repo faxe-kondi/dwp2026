@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/Auth.php';
 Auth::boot();
 require_once __DIR__ . '/includes/Csrf.php';
+require_once __DIR__ . '/includes/RateLimiter.php';
 require_once __DIR__ . '/db.php';
 $pdo = Database::connect();
 
@@ -26,15 +27,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         $stmt->execute([$identifier, $identifier]);
         $user = $stmt->fetch();
+        $loginSubject = ($user
+            ? 'user:' . (int) $user['id']
+            : 'identifier:' . mb_strtolower($identifier, 'UTF-8'))
+            . '|ip:' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $retryAfter = RateLimiter::check('login_failure', $loginSubject, 5, 900);
 
-        if (!$user || !password_verify($password, $user['password_hash'])) {
-            $errors[] = 'Incorrect username/email or password.';
-        } elseif ($user['is_banned']) {
-            $errors[] = 'This account has been banned' . ($user['ban_reason'] ? ': ' . $user['ban_reason'] . '.' : '.');
+        if ($retryAfter > 0) {
+            $errors[] = 'Too many failed sign-in attempts. Try again in ' . RateLimiter::formatWait($retryAfter) . '.';
+        } elseif (!$user || !password_verify($password, $user['password_hash'])) {
+            $retryAfter = RateLimiter::recordFailure('login_failure', $loginSubject, 5, 900);
+            if ($retryAfter > 0) {
+                $errors[] = 'Too many failed sign-in attempts. Try again in ' . RateLimiter::formatWait($retryAfter) . '.';
+            } else {
+                $errors[] = 'Incorrect username/email or password.';
+            }
         } else {
-            Auth::login($user);
-            header('Location: index.php');
-            exit;
+            RateLimiter::clear('login_failure', $loginSubject);
+            if ($user['is_banned']) {
+                $errors[] = 'This account has been banned' . ($user['ban_reason'] ? ': ' . $user['ban_reason'] . '.' : '.');
+            } else {
+                Auth::login($user);
+                header('Location: index.php');
+                exit;
+            }
         }
     }
 }

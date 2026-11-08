@@ -109,6 +109,23 @@ CREATE TABLE reports (
     FOREIGN KEY (target_comment_id) REFERENCES comments(id) ON DELETE CASCADE
 );
 
+CREATE TABLE report_post_dedup (
+    reporter_id INT NOT NULL,
+    post_id     INT NOT NULL,
+    PRIMARY KEY (reporter_id, post_id),
+    FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE action_rate_limits (
+    bucket_key       CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    action           VARCHAR(32) NOT NULL,
+    window_started_at DATETIME NOT NULL,
+    attempt_count    INT UNSIGNED NOT NULL,
+    PRIMARY KEY (bucket_key, action),
+    KEY idx_action_rate_limits_window (window_started_at)
+);
+
 CREATE TABLE moderation_report_checks (
     user_id         INT         NOT NULL,
     category        VARCHAR(20) NOT NULL,

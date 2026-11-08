@@ -57,6 +57,9 @@ try {
 } catch (OutOfBoundsException $e) {
     http_response_code(404);
     echo json_encode(['error' => 'target_not_found']);
+} catch (DuplicatePostReportException $e) {
+    http_response_code(409);
+    echo json_encode(['error' => 'already_reported', 'message' => $e->getMessage()]);
 } catch (DomainException $e) {
     http_response_code(403);
     echo json_encode(['error' => 'cannot_report_own_content']);
