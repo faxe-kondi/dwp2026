@@ -64,7 +64,7 @@ $profileBlocked = $blockState['blocked_by_viewer'] || $blockState['blocked_viewe
 $user_posts = $profileBlocked
     ? []
     : array_map('ds_post_view', Post::findByUser((int) $viewer['id']));
-usort($user_posts, fn($a, $b) => ($b['pinned'] <=> $a['pinned']));
+usort($user_posts, fn($a, $b) => ($b['profile_pinned'] <=> $a['profile_pinned']));
 $profile = ds_profile_view($viewer, count($user_posts));
 $isFollowingProfile = Auth::check()
     && !$isOwnProfile
@@ -121,7 +121,7 @@ include __DIR__ . '/includes/header.php';
       <div class="empty-state">No posts yet.</div>
     <?php else: ?>
       <div class="photo-grid">
-        <?php foreach ($user_posts as $p) ds_photo_card($p); ?>
+        <?php foreach ($user_posts as $p) ds_photo_card($p, 'profile'); ?>
       </div>
     <?php endif; ?>
 

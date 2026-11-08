@@ -71,7 +71,7 @@ include __DIR__ . '/includes/header.php';
     </div>
     <div class="photo-grid">
       <?php if ($hot_posts): ?>
-        <?php foreach ($hot_posts as $p) ds_photo_card($p); ?>
+        <?php foreach ($hot_posts as $p) ds_photo_card($p, 'homepage'); ?>
       <?php else: ?>
         <p class="empty-state">No pictures have received likes in the last 48 hours.</p>
       <?php endif; ?>
@@ -93,7 +93,7 @@ include __DIR__ . '/includes/header.php';
     </div>
     <div class="photo-grid">
       <?php if ($newest_posts): ?>
-        <?php foreach ($newest_posts as $p) ds_photo_card($p); ?>
+        <?php foreach ($newest_posts as $p) ds_photo_card($p, 'homepage'); ?>
       <?php else: ?>
         <p class="empty-state">No pictures yet. Be the first to post one.</p>
       <?php endif; ?>
