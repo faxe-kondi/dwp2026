@@ -175,7 +175,7 @@ include __DIR__ . '/includes/header.php';
             <?php foreach ($results['items'] as $comment): ?>
               <article class="search-comment-result reported-comment-result">
                 <a class="search-comment-post-link" href="report-details.php?type=comments&amp;id=<?= (int) $comment['id']; ?>" aria-label="View reports for comment on <?= htmlspecialchars($comment['post_title']); ?>"></a>
-                <a class="search-comment-author" href="profile.php?id=<?= (int) $comment['user_id']; ?>">
+                <a class="search-comment-author" href="<?= htmlspecialchars(ds_user_profile_url($comment['username'])); ?>">
                   <img src="<?= htmlspecialchars(ds_user_avatar_url(['username' => $comment['username'], 'avatar' => $comment['avatar'] ?? 'default.png'], 48)); ?>" alt="">
                   <span><?= htmlspecialchars($comment['username']); ?></span>
                 </a>

@@ -3,6 +3,7 @@ require_once __DIR__ . '/Auth.php';
 Auth::boot();
 require_once __DIR__ . '/Csrf.php';
 require_once __DIR__ . '/Moderation.php';
+require_once __DIR__ . '/User.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -33,13 +34,18 @@ if (
 }
 
 try {
+    $target = User::find($targetId);
+    if ($target === null) {
+        throw new OutOfBoundsException('User not found.');
+    }
+
     Moderation::setUserBanned(
         (int) Auth::user()['id'],
         $targetId,
         $action === 'ban',
         trim($reason)
     );
-    header('Location: ../profile.php?id=' . $targetId . '&moderation=' . ($action === 'ban' ? 'banned' : 'unbanned'));
+    header('Location: ../@' . rawurlencode($target['username']) . '?moderation=' . ($action === 'ban' ? 'banned' : 'unbanned'));
     exit;
 } catch (InvalidArgumentException $e) {
     http_response_code(400);

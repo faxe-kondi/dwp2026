@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     }
 
     $imagePath = __DIR__ . '/uploads/posts/' . basename($deletedFilename);
-    $profileUrl = 'profile.php?id=' . (int) $realRow['user_id'] . '&post_deleted=1';
+    $profileUrl = ds_user_profile_url($realRow['username']) . '?post_deleted=1';
     if (basename($deletedFilename) !== $deletedFilename || (is_file($imagePath) && !unlink($imagePath))) {
         error_log('Post image cleanup failed after deleting post #' . $id . '.');
         header('Location: ' . $profileUrl . '&cleanup_failed=1');
@@ -261,7 +261,7 @@ include __DIR__ . '/includes/header.php';
 
     <div class="post-details">
       <div class="uploader-card">
-        <a class="uploader-profile" href="profile.php?id=<?= (int) $post['user_id']; ?>">
+        <a class="uploader-profile" href="<?= htmlspecialchars(ds_user_profile_url($post['username'])); ?>">
           <img src="<?= htmlspecialchars(ds_post_avatar_url($post, 104)); ?>" alt="">
           <span class="name"><?= htmlspecialchars($post['username']); ?></span>
         </a>
@@ -371,11 +371,11 @@ include __DIR__ . '/includes/header.php';
           <?php else: ?>
             <?php foreach ($post_comments as $commentIndex => $c): ?>
               <div class="thread-item" id="comment-<?= (int) $c['id']; ?>">
-                <a class="comment-author-avatar" href="profile.php?id=<?= (int) $c['user_id']; ?>" aria-label="View @<?= htmlspecialchars($c['username']); ?>'s profile">
+                <a class="comment-author-avatar" href="<?= htmlspecialchars(ds_user_profile_url($c['username'])); ?>" aria-label="View @<?= htmlspecialchars($c['username']); ?>'s profile">
                   <img src="<?= htmlspecialchars($c['avatar_url']); ?>" alt="">
                 </a>
                 <div class="thread-item-content">
-                  <a class="who comment-author-name" href="profile.php?id=<?= (int) $c['user_id']; ?>">@<?= htmlspecialchars($c['username']); ?></a>
+                  <a class="who comment-author-name" href="<?= htmlspecialchars(ds_user_profile_url($c['username'])); ?>">@<?= htmlspecialchars($c['username']); ?></a>
                   <time><?= $c['time']; ?></time>
                   <?php if (
                       !Auth::check() || (int) $c['user_id'] !== (int) Auth::user()['id']

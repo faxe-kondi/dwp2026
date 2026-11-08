@@ -6,17 +6,44 @@ require_once __DIR__ . '/includes/User.php';
 require_once __DIR__ . '/includes/Post.php';
 require_once __DIR__ . '/includes/helpers.php';
 
+$isPrettyProfileRoute = defined('DS_PRETTY_PROFILE_ROUTE') && DS_PRETTY_PROFILE_ROUTE;
+$requestedUsername = $_GET['username'] ?? null;
 $requestedUserId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
-$isOwnProfile = $requestedUserId === false
-    || $requestedUserId === null
-    || $requestedUserId < 1
-    || (Auth::check() && $requestedUserId === (int) Auth::user()['id']);
+$hasUsernameParameter = $isPrettyProfileRoute || array_key_exists('username', $_GET);
+$hasLegacyId = array_key_exists('id', $_GET);
 
-if ($isOwnProfile) {
+if ($hasUsernameParameter) {
+    $viewer = is_string($requestedUsername) && $requestedUsername !== ''
+        ? User::findByUsername($requestedUsername)
+        : null;
+    if ($viewer !== null && !$isPrettyProfileRoute) {
+        $query = $_GET;
+        unset($query['username'], $query['id']);
+        $profileUrl = '@' . rawurlencode($viewer['username']);
+        header('Location: ' . $profileUrl . ($query ? '?' . http_build_query($query) : ''), true, 301);
+        exit;
+    }
+    $isOwnProfile = $viewer !== null
+        && Auth::check()
+        && (int) $viewer['id'] === (int) Auth::user()['id'];
+} elseif ($hasLegacyId) {
+    $viewer = $requestedUserId !== false && $requestedUserId !== null && $requestedUserId > 0
+        ? User::find($requestedUserId)
+        : null;
+    if ($viewer !== null) {
+        $query = $_GET;
+        unset($query['id']);
+        $profileUrl = '@' . rawurlencode($viewer['username']);
+        header('Location: ' . $profileUrl . ($query ? '?' . http_build_query($query) : ''), true, 301);
+        exit;
+    }
+    $isOwnProfile = $viewer !== null
+        && Auth::check()
+        && (int) $viewer['id'] === (int) Auth::user()['id'];
+} else {
     Auth::requireLogin();
     $viewer = User::find((int) Auth::user()['id']);
-} else {
-    $viewer = User::find($requestedUserId);
+    $isOwnProfile = true;
 }
 
 if (!$viewer) {

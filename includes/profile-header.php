@@ -105,12 +105,12 @@ if (!isset($profile_tab)) { $profile_tab = 'posts'; }
 
 <div class="profile-tabs">
   <?php if ($isOwnProfile): ?>
-    <a href="profile.php" class="<?= $profile_tab === 'posts' ? 'active' : ''; ?>">Posts</a>
+    <a href="<?= htmlspecialchars(ds_user_profile_url($profile['username'])); ?>" class="<?= $profile_tab === 'posts' ? 'active' : ''; ?>">Posts</a>
     <a href="liked.php" class="<?= $profile_tab === 'likes' ? 'active' : ''; ?>">Likes</a>
     <a href="following.php" class="<?= $profile_tab === 'following' ? 'active' : ''; ?>">Following</a>
     <a href="blocked.php" class="<?= $profile_tab === 'blocked' ? 'active' : ''; ?>">Blocked</a>
     <a href="settings.php" class="<?= $profile_tab === 'settings' ? 'active' : ''; ?>">Settings</a>
   <?php else: ?>
-    <a href="profile.php?id=<?= (int) $viewer['id']; ?>" class="active">Posts</a>
+    <a href="<?= htmlspecialchars(ds_user_profile_url($profile['username'])); ?>" class="active">Posts</a>
   <?php endif; ?>
 </div>

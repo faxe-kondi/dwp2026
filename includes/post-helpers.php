@@ -56,7 +56,7 @@ function ds_photo_card($p) {
         <img src="<?= htmlspecialchars($img); ?>" alt="<?= htmlspecialchars($p['title']); ?>" loading="lazy">
       </a>
       <div class="photo-meta">
-        <a href="profile.php?id=<?= (int) $p['user_id']; ?>" class="who">
+        <a href="<?= htmlspecialchars(ds_user_profile_url($p['username'])); ?>" class="who">
           <img src="<?= htmlspecialchars($avatar); ?>" alt="<?= htmlspecialchars($p['username']); ?>">
           <span>@<?= htmlspecialchars($p['username']); ?></span>
         </a>
