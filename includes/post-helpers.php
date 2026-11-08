@@ -27,7 +27,8 @@ function ds_post_view(array $row): array {
     'comment_count' => (int) ($row['comment_count'] ?? 0),
     'time'          => ds_time_ago($row['created_at']),
     'hot'           => !empty($row['hot_likes']),
-    'pinned'        => !empty($row['front_pinned_at']) || !empty($row['profile_pinned_at']),
+    'front_pinned'  => !empty($row['front_pinned_at']),
+    'profile_pinned' => !empty($row['profile_pinned_at']),
   ];
 }
 
@@ -39,7 +40,7 @@ function ds_post_image_url(array $p): string {
   return 'uploads/posts/' . $p['image_file'];
 }
 
-function ds_photo_card($p) {
+function ds_photo_card($p, ?string $pinScope = null) {
   $img = ds_post_image_url($p);
   $avatar = ds_post_avatar_url($p, 60);
   $isOwnPost = Auth::check()
@@ -52,7 +53,8 @@ function ds_photo_card($p) {
     <div class="photo-card-inner">
       <a href="post.php?id=<?= $p['id']; ?>" class="frame" style="display:block;">
         <?php if (!empty($p['hot'])): ?><span class="flame-badge">&#128293; HOT</span><?php endif; ?>
-        <?php if (!empty($p['pinned'])): ?><span class="pin-badge">&#128204; Pinned</span><?php endif; ?>
+        <?php if ($pinScope === 'homepage' && !empty($p['front_pinned'])): ?><span class="pin-badge">&#128204; Pinned</span><?php endif; ?>
+        <?php if ($pinScope === 'profile' && !empty($p['profile_pinned'])): ?><span class="pin-badge">&#128204; Pinned</span><?php endif; ?>
         <img src="<?= htmlspecialchars($img); ?>" alt="<?= htmlspecialchars($p['title']); ?>" loading="lazy">
       </a>
       <div class="photo-meta">

@@ -33,6 +33,8 @@ if (!$realRow) {
     exit;
 }
 
+$isPostOwner = Auth::check() && (int) $realRow['user_id'] === (int) Auth::user()['id'];
+
 $blockedPostState = $currentUser
     ? User::getBlockState((int) $currentUser['id'], (int) $realRow['user_id'])
     : ['blocked_by_viewer' => false, 'blocked_viewer' => false];
@@ -57,6 +59,46 @@ if (
     </section>
     <?php
     include __DIR__ . '/includes/footer.php';
+    exit;
+}
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && in_array($_POST['action'] ?? null, ['pin_front', 'pin_profile'], true)
+) {
+    Auth::requireLogin();
+    Csrf::verifyOrFail();
+
+    $pinAction = $_POST['action'];
+    if ($pinAction === 'pin_front' && !Auth::canModerate()) {
+        http_response_code(403);
+        exit('Only moderators and the site owner can pin posts to the homepage.');
+    }
+    if ($pinAction === 'pin_profile' && !$isPostOwner) {
+        http_response_code(404);
+        exit('Post not found.');
+    }
+
+    $pinColumn = $pinAction === 'pin_front' ? 'front_pinned_at' : 'profile_pinned_at';
+    $shouldPin = empty($realRow[$pinColumn]);
+    try {
+        $updated = $pinAction === 'pin_front'
+            ? Post::setFrontPinned($id, $shouldPin)
+            : Post::setProfilePinnedOwned($id, (int) Auth::user()['id'], $shouldPin);
+    } catch (PDOException $e) {
+        error_log('Post pin update failed: ' . $e->getMessage());
+        http_response_code(500);
+        exit('Something went wrong updating this post. Please try again.');
+    }
+
+    if (!$updated) {
+        http_response_code(404);
+        exit('Post not found.');
+    }
+
+    $pinStatus = $pinAction === 'pin_front' ? 'homepage' : 'profile';
+    $pinStatus .= $shouldPin ? '_pinned' : '_unpinned';
+    header('Location: post.php?id=' . $id . '&pin=' . $pinStatus);
     exit;
 }
 
@@ -195,8 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
 
 $post = ds_post_view($realRow);
 
-$isOwner = $currentUser
-    && (int) $realRow['user_id'] === (int) $currentUser['id'];
+$isOwner = $isPostOwner;
 $canDeletePost = $isOwner || Auth::canModerate();
 $isFollowingPoster = $currentUser
     && !$isOwner
@@ -223,6 +264,16 @@ $post_comments = $blockedPostState['blocked_by_viewer'] ? [] : array_map(
 
 $active = '';
 $page_title = $post['title'] . ' - @' . $post['username'];
+$pinNotices = [
+    'homepage_pinned' => 'Post pinned to the homepage.',
+    'homepage_unpinned' => 'Post unpinned from the homepage.',
+    'profile_pinned' => 'Post pinned to your profile.',
+    'profile_unpinned' => 'Post unpinned from your profile.',
+];
+$requestedPinNotice = $_GET['pin'] ?? '';
+$pinNotice = is_string($requestedPinNotice)
+    ? ($pinNotices[$requestedPinNotice] ?? null)
+    : null;
 include __DIR__ . '/includes/header.php';
 ?>
 
@@ -260,6 +311,9 @@ include __DIR__ . '/includes/header.php';
     </div>
 
     <div class="post-details">
+      <?php if ($pinNotice !== null): ?>
+        <div class="form-success" role="status"><?= htmlspecialchars($pinNotice); ?></div>
+      <?php endif; ?>
       <div class="uploader-card">
         <a class="uploader-profile" href="<?= htmlspecialchars(ds_user_profile_url($post['username'])); ?>">
           <img src="<?= htmlspecialchars(ds_post_avatar_url($post, 104)); ?>" alt="">
@@ -288,6 +342,18 @@ include __DIR__ . '/includes/header.php';
             <?php if ($canDeletePost): ?>
               <?php if ($isOwner): ?>
                 <a class="action-menu-item" href="edit-post.php?id=<?= $post['id']; ?>">Edit post</a>
+                <form method="post" action="post.php?id=<?= $post['id']; ?>">
+                  <?= Csrf::field(); ?>
+                  <input type="hidden" name="action" value="pin_profile">
+                  <button type="submit" class="action-menu-item"><?= $realRow['profile_pinned_at'] !== null ? 'Unpin from profile' : 'Pin to profile'; ?></button>
+                </form>
+              <?php endif; ?>
+              <?php if (Auth::canModerate()): ?>
+                <form method="post" action="post.php?id=<?= $post['id']; ?>">
+                  <?= Csrf::field(); ?>
+                  <input type="hidden" name="action" value="pin_front">
+                  <button type="submit" class="action-menu-item"><?= $realRow['front_pinned_at'] !== null ? 'Unpin from homepage' : 'Pin to homepage'; ?></button>
+                </form>
               <?php endif; ?>
               <form method="post" action="post.php?id=<?= $post['id']; ?>" onsubmit="return confirm('Delete this post? This cannot be undone.');">
                 <?= Csrf::field(); ?>

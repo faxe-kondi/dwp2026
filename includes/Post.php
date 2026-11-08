@@ -3,6 +3,55 @@ require_once __DIR__ . '/../db.php';
 
 class Post
 {
+    private static function setPin(int $id, string $column, bool $pinned, ?int $ownerId = null): bool
+    {
+        if (!in_array($column, ['front_pinned_at', 'profile_pinned_at'], true)) {
+            throw new InvalidArgumentException('Choose a valid post pin.');
+        }
+
+        $pdo = Database::connect();
+        $pdo->beginTransaction();
+
+        try {
+            $sql = 'SELECT id FROM posts WHERE id = ?';
+            $params = [$id];
+            if ($ownerId !== null) {
+                $sql .= ' AND user_id = ?';
+                $params[] = $ownerId;
+            }
+            $stmt = $pdo->prepare($sql . ' FOR UPDATE');
+            $stmt->execute($params);
+            if (!$stmt->fetch()) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            $stmt = $pdo->prepare(
+                'UPDATE posts
+                 SET ' . $column . ' = CASE WHEN ? THEN COALESCE(' . $column . ', CURRENT_TIMESTAMP) ELSE NULL END
+                 WHERE id = ?'
+            );
+            $stmt->execute([$pinned, $id]);
+            $pdo->commit();
+            return true;
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public static function setFrontPinned(int $id, bool $pinned): bool
+    {
+        return self::setPin($id, 'front_pinned_at', $pinned);
+    }
+
+    public static function setProfilePinnedOwned(int $id, int $userId, bool $pinned): bool
+    {
+        return self::setPin($id, 'profile_pinned_at', $pinned, $userId);
+    }
+
     public static function create(int $userId, string $filename, string $title, ?string $caption): int
     {
         $pdo = Database::connect();

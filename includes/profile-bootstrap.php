@@ -16,6 +16,6 @@ if (!$viewer) {
 }
 
 $user_posts = array_map('ds_post_view', Post::findByUser((int) $viewer['id']));
-usort($user_posts, fn($a, $b) => ($b['pinned'] <=> $a['pinned']));
+usort($user_posts, fn($a, $b) => ($b['profile_pinned'] <=> $a['profile_pinned']));
 
 $profile = ds_profile_view($viewer, count($user_posts));
