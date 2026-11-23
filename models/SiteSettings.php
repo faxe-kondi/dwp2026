@@ -52,4 +52,27 @@ class SiteSettings
             'comments' => (int) $stats['comments'],
         ];
     }
+
+    public static function updateMany(array $settings): void
+    {
+        $pdo = Database::connect();
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare(
+                'INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)
+                 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)'
+            );
+            foreach ($settings as $key => $value) {
+                $stmt->execute([$key, $value]);
+            }
+            $pdo->commit();
+            self::$settings = null;
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
 }

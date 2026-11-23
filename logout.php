@@ -1,8 +1,3 @@
 <?php
-require_once __DIR__ . '/includes/Auth.php';
-Auth::boot();
-
-Auth::logout();
-
-header('Location: index.php');
-exit;
+require_once __DIR__ . '/controllers/LogoutController.php';
+LogoutController::logout();

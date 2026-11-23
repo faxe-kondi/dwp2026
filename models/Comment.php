@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../db.php';
-require_once __DIR__ . '/RateLimiter.php';
+require_once __DIR__ . '/../support/RateLimiter.php';
 
 class Comment
 {

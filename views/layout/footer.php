@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/SiteSettings.php';
-$footerContact = trim(SiteSettings::get('contact'));
+require_once dirname(__DIR__, 2) . '/support/Auth.php';
+require_once dirname(__DIR__, 2) . '/support/Csrf.php';
 ?>
 <footer class="site-footer">
   <div class="wrap">
@@ -47,7 +47,6 @@ $footerContact = trim(SiteSettings::get('contact'));
   </div>
 </footer>
 
-<?php require_once __DIR__ . '/Csrf.php'; ?>
 <dialog id="reportModal" class="modal">
   <div class="modal-box">
     <form id="reportForm" action="includes/submit-report.php" method="post">
@@ -124,6 +123,6 @@ $footerContact = trim(SiteSettings::get('contact'));
 
 <div class="toast" id="toast" aria-live="polite"></div>
 
-<script src="js/main.js?v=<?= filemtime(__DIR__ . '/../js/main.js'); ?>"></script>
+<script src="js/main.js?v=<?= filemtime(dirname(__DIR__, 2) . '/js/main.js'); ?>"></script>
 </body>
 </html>

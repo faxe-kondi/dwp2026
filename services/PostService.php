@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/Post.php';
-require_once __DIR__ . '/Image.php';
-require_once __DIR__ . '/RateLimiter.php';
+require_once __DIR__ . '/../models/Post.php';
+require_once __DIR__ . '/../support/Image.php';
+require_once __DIR__ . '/../support/RateLimiter.php';
 
 class PostService
 {

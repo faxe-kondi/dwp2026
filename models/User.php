@@ -3,6 +3,71 @@ require_once __DIR__ . '/../db.php';
 
 class User
 {
+    public static function findForLogin(string $identifier): ?array
+    {
+        $stmt = Database::connect()->prepare(
+            'SELECT users.id, users.username, users.password_hash, roles.name AS role,
+                    users.is_banned, users.ban_reason
+             FROM users
+             JOIN roles ON roles.id = users.role_id
+             WHERE users.username = ? OR users.email = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$identifier, $identifier]);
+        $user = $stmt->fetch();
+        return $user ?: null;
+    }
+
+    public static function usernameExists(string $username, ?int $exceptUserId = null): bool
+    {
+        $sql = 'SELECT 1 FROM users WHERE username = ?';
+        $params = [$username];
+        if ($exceptUserId !== null) {
+            $sql .= ' AND id != ?';
+            $params[] = $exceptUserId;
+        }
+
+        $stmt = Database::connect()->prepare($sql . ' LIMIT 1');
+        $stmt->execute($params);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    public static function emailExists(string $email): bool
+    {
+        $stmt = Database::connect()->prepare('SELECT 1 FROM users WHERE email = ? LIMIT 1');
+        $stmt->execute([$email]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    public static function createAccount(string $username, string $email, string $passwordHash): int
+    {
+        $stmt = Database::connect()->prepare(
+            'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)'
+        );
+        $stmt->execute([$username, $email, $passwordHash]);
+        return (int) Database::connect()->lastInsertId();
+    }
+
+    public static function updateProfile(
+        int $userId,
+        string $username,
+        ?string $bio,
+        ?string $avatarFilename = null
+    ): void {
+        if ($avatarFilename === null) {
+            $stmt = Database::connect()->prepare(
+                'UPDATE users SET username = ?, bio = ? WHERE id = ?'
+            );
+            $stmt->execute([$username, $bio, $userId]);
+            return;
+        }
+
+        $stmt = Database::connect()->prepare(
+            'UPDATE users SET username = ?, bio = ?, avatar = ? WHERE id = ?'
+        );
+        $stmt->execute([$username, $bio, $avatarFilename, $userId]);
+    }
+
     public static function find(int $id): ?array
     {
         $pdo = Database::connect();
