@@ -17,7 +17,6 @@ require_once dirname(__DIR__, 2) . '/support/Auth.php';
     --secondary: <?= htmlspecialchars($secondaryColor); ?>;
   }
 </style>
-<script>document.documentElement.classList.add('js-ready');</script>
 </head>
 <body>
 

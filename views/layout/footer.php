@@ -123,6 +123,8 @@ require_once dirname(__DIR__, 2) . '/support/Csrf.php';
 
 <div class="toast" id="toast" aria-live="polite"></div>
 
-<script src="js/main.js?v=<?= filemtime(dirname(__DIR__, 2) . '/js/main.js'); ?>"></script>
+<?php foreach (['main', 'content', 'uploads', 'social', 'moderation'] as $script): ?>
+  <script src="js/<?= $script; ?>.js?v=<?= filemtime(dirname(__DIR__, 2) . '/js/' . $script . '.js'); ?>"></script>
+<?php endforeach; ?>
 </body>
 </html>
