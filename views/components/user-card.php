@@ -17,7 +17,7 @@ $avatar = ds_user_avatar_url($u, 140);
       <button
         type="button"
         class="btn unblock-btn"
-        data-block-url="includes/block.php"
+        data-block-url="controllers/BlockController.php"
         data-user-id="<?= (int) ($u['id'] ?? 0); ?>"
         data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
         data-blocked="true"
@@ -29,7 +29,7 @@ $avatar = ds_user_avatar_url($u, 140);
       <button
         type="button"
         class="btn follow-btn following"
-        data-follow-url="includes/follow.php"
+        data-follow-url="controllers/FollowController.php"
         data-user-id="<?= (int) ($u['id'] ?? 0); ?>"
         data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
         data-following="true"

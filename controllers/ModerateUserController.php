@@ -67,3 +67,7 @@ class ModerateUserController
         }
     }
 }
+
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    ModerateUserController::handle();
+}

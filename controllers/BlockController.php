@@ -65,3 +65,7 @@ class BlockController
         }
     }
 }
+
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    BlockController::handle();
+}

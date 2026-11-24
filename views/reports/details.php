@@ -55,7 +55,7 @@ View::render('layout/header', get_defined_vars());
       <section class="report-review-actions" aria-label="Resolve pending reports">
         <h2>Resolve pending reports</h2>
         <div class="report-review-buttons">
-          <form method="post" action="includes/moderate-report.php">
+          <form method="post" action="controllers/ModerateReportController.php">
             <?= Csrf::field(); ?>
             <input type="hidden" name="type" value="<?= htmlspecialchars($type); ?>">
             <input type="hidden" name="id" value="<?= (int) $subject['id']; ?>">
@@ -74,7 +74,7 @@ View::render('layout/header', get_defined_vars());
               data-user-banned="<?= $subject['is_banned'] ? 'true' : 'false'; ?>"
             ><?= $subject['is_banned'] ? 'Keep user banned and resolve reports' : 'Ban user and resolve reports'; ?></button>
           <?php elseif ($type !== 'users'): ?>
-            <form method="post" action="includes/moderate-report.php" onsubmit="return confirm('Remove this <?= $type === 'posts' ? 'post' : 'comment'; ?> and resolve the pending reports?');">
+            <form method="post" action="controllers/ModerateReportController.php" onsubmit="return confirm('Remove this <?= $type === 'posts' ? 'post' : 'comment'; ?> and resolve the pending reports?');">
               <?= Csrf::field(); ?>
               <input type="hidden" name="type" value="<?= htmlspecialchars($type); ?>">
               <input type="hidden" name="id" value="<?= (int) $subject['id']; ?>">

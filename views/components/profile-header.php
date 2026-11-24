@@ -19,7 +19,7 @@ if (!isset($profile_tab)) { $profile_tab = 'posts'; }
         <button
           type="button"
           class="btn unblock-btn"
-          data-block-url="includes/block.php"
+          data-block-url="controllers/BlockController.php"
           data-user-id="<?= (int) $viewer['id']; ?>"
           data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
           data-blocked="true"
@@ -29,7 +29,7 @@ if (!isset($profile_tab)) { $profile_tab = 'posts'; }
         <button
           type="button"
           class="btn follow-btn<?= $isFollowingProfile ? ' following' : ''; ?>"
-          data-follow-url="includes/follow.php"
+          data-follow-url="controllers/FollowController.php"
           data-user-id="<?= (int) $viewer['id']; ?>"
           data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>"
           data-following="<?= $isFollowingProfile ? 'true' : 'false'; ?>"
@@ -55,11 +55,11 @@ if (!isset($profile_tab)) { $profile_tab = 'posts'; }
         <div class="action-menu-list" id="profileUserMenu">
           <button type="button" class="action-menu-item" data-report-type="user" data-report-id="<?= (int) $viewer['id']; ?>" data-report-target="@<?= htmlspecialchars($profile['username']); ?>">Report user</button>
           <?php if (Auth::check()): ?>
-            <button type="button" class="action-menu-item action-menu-item--danger" data-block-url="includes/block.php" data-user-id="<?= (int) $viewer['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="false" data-block-label="@<?= htmlspecialchars($profile['username']); ?>">Block user</button>
+            <button type="button" class="action-menu-item action-menu-item--danger" data-block-url="controllers/BlockController.php" data-user-id="<?= (int) $viewer['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="false" data-block-label="@<?= htmlspecialchars($profile['username']); ?>">Block user</button>
           <?php endif; ?>
           <?php if (!empty($canManageProfile)): ?>
             <?php if ($viewer['is_banned']): ?>
-              <form method="post" action="includes/moderate-user.php" onsubmit="return confirm('Unban @<?= htmlspecialchars($profile['username'], ENT_QUOTES); ?>?');">
+              <form method="post" action="controllers/ModerateUserController.php" onsubmit="return confirm('Unban @<?= htmlspecialchars($profile['username'], ENT_QUOTES); ?>?');">
                 <?= Csrf::field(); ?>
                 <input type="hidden" name="user_id" value="<?= (int) $viewer['id']; ?>">
                 <input type="hidden" name="action" value="unban">

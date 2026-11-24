@@ -21,7 +21,7 @@ View::render('layout/header', get_defined_vars());
         <h1>User blocked</h1>
         <p>Posts from this user will no longer be shown on your feed.</p>
         <p><a class="btn btn-solid" href="blocked.php">Manage blocked users</a></p>
-        <button type="button" class="btn unblock-btn" data-block-url="includes/block.php" data-user-id="<?= (int) $realRow['user_id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="true" data-unblock-label="@<?= htmlspecialchars($post['username']); ?>">Unblock user</button>
+        <button type="button" class="btn unblock-btn" data-block-url="controllers/BlockController.php" data-user-id="<?= (int) $realRow['user_id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="true" data-unblock-label="@<?= htmlspecialchars($post['username']); ?>">Unblock user</button>
       </div>
     <?php else: ?>
       <div class="post-image">
@@ -40,7 +40,7 @@ View::render('layout/header', get_defined_vars());
           </a>
           <?php if (!$isOwner): ?>
             <?php if ($currentUser): ?>
-              <button type="button" class="btn follow-btn<?= $isFollowingPoster ? ' following' : ''; ?>" data-follow-url="includes/follow.php" data-user-id="<?= (int) $realRow['user_id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-following="<?= $isFollowingPoster ? 'true' : 'false'; ?>" data-following-label="Following" data-follow-label="+ Follow" aria-pressed="<?= $isFollowingPoster ? 'true' : 'false'; ?>"><?= $isFollowingPoster ? 'Following' : '+ Follow'; ?></button>
+              <button type="button" class="btn follow-btn<?= $isFollowingPoster ? ' following' : ''; ?>" data-follow-url="controllers/FollowController.php" data-user-id="<?= (int) $realRow['user_id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-following="<?= $isFollowingPoster ? 'true' : 'false'; ?>" data-following-label="Following" data-follow-label="+ Follow" aria-pressed="<?= $isFollowingPoster ? 'true' : 'false'; ?>"><?= $isFollowingPoster ? 'Following' : '+ Follow'; ?></button>
             <?php else: ?>
               <a class="btn" href="login.php">Log in to follow</a>
             <?php endif; ?>
@@ -73,7 +73,7 @@ View::render('layout/header', get_defined_vars());
               <?php else: ?>
                 <button type="button" class="action-menu-item" data-report-type="user" data-report-id="<?= (int) $realRow['user_id']; ?>" data-report-target="@<?= htmlspecialchars($post['username']); ?>">Report user</button>
                 <?php if ($currentUser): ?>
-                  <button type="button" class="action-menu-item action-menu-item--danger" data-block-url="includes/block.php" data-user-id="<?= (int) $realRow['user_id']; ?>" data-post-id="<?= (int) $post['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="false" data-block-label="@<?= htmlspecialchars($post['username']); ?>">Block user</button>
+                  <button type="button" class="action-menu-item action-menu-item--danger" data-block-url="controllers/BlockController.php" data-user-id="<?= (int) $realRow['user_id']; ?>" data-post-id="<?= (int) $post['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-blocked="false" data-block-label="@<?= htmlspecialchars($post['username']); ?>">Block user</button>
                 <?php endif; ?>
               <?php endif; ?>
             </div>
@@ -98,7 +98,7 @@ View::render('layout/header', get_defined_vars());
             </span>
           <?php else: ?>
             <?php if (Auth::check()): ?>
-              <button type="button" class="like-btn<?= !empty($post['liked_by_viewer']) ? ' liked' : ''; ?>" data-like-url="includes/like.php" data-post-id="<?= $post['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-likes="<?= $post['likes']; ?>" data-liked="<?= !empty($post['liked_by_viewer']) ? 'true' : 'false'; ?>" aria-pressed="<?= !empty($post['liked_by_viewer']) ? 'true' : 'false'; ?>" aria-label="<?= !empty($post['liked_by_viewer']) ? 'Unlike post' : 'Like post'; ?>">
+              <button type="button" class="like-btn<?= !empty($post['liked_by_viewer']) ? ' liked' : ''; ?>" data-like-url="controllers/LikeController.php" data-post-id="<?= $post['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-likes="<?= $post['likes']; ?>" data-liked="<?= !empty($post['liked_by_viewer']) ? 'true' : 'false'; ?>" aria-pressed="<?= !empty($post['liked_by_viewer']) ? 'true' : 'false'; ?>" aria-label="<?= !empty($post['liked_by_viewer']) ? 'Unlike post' : 'Like post'; ?>">
             <?php else: ?>
               <a class="like-btn" href="login.php" aria-label="Log in to like this post">
             <?php endif; ?>

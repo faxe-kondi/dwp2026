@@ -74,3 +74,7 @@ class FollowController
         }
     }
 }
+
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    FollowController::handle();
+}

@@ -49,7 +49,7 @@ require_once dirname(__DIR__, 2) . '/support/Csrf.php';
 
 <dialog id="reportModal" class="modal">
   <div class="modal-box">
-    <form id="reportForm" action="includes/submit-report.php" method="post">
+    <form id="reportForm" action="controllers/SubmitReportController.php" method="post">
       <?= Csrf::field(); ?>
       <input type="hidden" name="target_type">
       <input type="hidden" name="target_id">
@@ -96,7 +96,7 @@ require_once dirname(__DIR__, 2) . '/support/Csrf.php';
 
 <dialog id="banUserModal" class="modal">
   <div class="modal-box">
-    <form id="banUserForm" action="includes/moderate-user.php" method="post">
+    <form id="banUserForm" action="controllers/ModerateUserController.php" method="post">
       <?= Csrf::field(); ?>
       <input type="hidden" name="user_id">
       <input type="hidden" name="type">

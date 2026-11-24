@@ -33,7 +33,7 @@ $reportTarget = '@' . $p['username'] . "'s post";
           </span>
         <?php else: ?>
           <?php if (Auth::check()): ?>
-            <button type="button" class="<?= $likeClass; ?>" data-like-url="includes/like.php" data-post-id="<?= $p['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-likes="<?= $p['likes']; ?>" data-liked="<?= $isLiked ? 'true' : 'false'; ?>" aria-pressed="<?= $isLiked ? 'true' : 'false'; ?>" aria-label="<?= $isLiked ? 'Unlike post' : 'Like post'; ?>">
+            <button type="button" class="<?= $likeClass; ?>" data-like-url="controllers/LikeController.php" data-post-id="<?= $p['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-likes="<?= $p['likes']; ?>" data-liked="<?= $isLiked ? 'true' : 'false'; ?>" aria-pressed="<?= $isLiked ? 'true' : 'false'; ?>" aria-label="<?= $isLiked ? 'Unlike post' : 'Like post'; ?>">
           <?php else: ?>
             <button type="button" class="<?= $likeClass; ?>" data-likes="<?= $p['likes']; ?>">
           <?php endif; ?>

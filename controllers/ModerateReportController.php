@@ -76,6 +76,14 @@ class ModerateReportController
             }
         }
 
+        if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+            ModerateReportController::handle();
+        }
+
+        if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+            ModerateReportController::handle();
+        }
+
         if ($action === 'remove') {
             $query = ['category' => $category, 'moderation' => 'removed'];
             if ($cleanupFailed) {
