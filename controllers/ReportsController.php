@@ -11,7 +11,7 @@ class ReportsController
             exit('Only moderators and the site owner can view reported content.');
         }
 
-        require_once dirname(__DIR__) . '/models/Report.php';
+        require_once dirname(__DIR__) . '/models/ReportModeration.php';
         require_once dirname(__DIR__) . '/helpers/bootstrap.php';
         require_once dirname(__DIR__) . '/support/View.php';
 
@@ -28,11 +28,11 @@ class ReportsController
             : 1;
 
         if ($category !== '') {
-            Report::markCategoryChecked((int) Auth::user()['id'], $category);
+            ReportModeration::markCategoryChecked((int) Auth::user()['id'], $category);
         }
-        $newReports = Report::getUnreadSubjectCounts((int) Auth::user()['id'], $threshold);
+        $newReports = ReportModeration::getUnreadSubjectCounts((int) Auth::user()['id'], $threshold);
         $results = $category !== ''
-            ? Report::getFlaggedSubjects(
+            ? ReportModeration::getFlaggedSubjects(
                 $category,
                 $threshold,
                 $itemsPerPage,
@@ -42,7 +42,7 @@ class ReportsController
         $totalPages = max(1, (int) ceil($results['total'] / $itemsPerPage));
         if ($category !== '' && $page > $totalPages) {
             $page = $totalPages;
-            $results = Report::getFlaggedSubjects(
+            $results = ReportModeration::getFlaggedSubjects(
                 $category,
                 $threshold,
                 $itemsPerPage,

@@ -11,7 +11,7 @@ class ReportDetailsController
             exit('Only moderators and the site owner can view report details.');
         }
 
-        require_once dirname(__DIR__) . '/models/Report.php';
+        require_once dirname(__DIR__) . '/models/ReportModeration.php';
         require_once dirname(__DIR__) . '/helpers/bootstrap.php';
         require_once dirname(__DIR__) . '/support/Csrf.php';
         require_once dirname(__DIR__) . '/support/View.php';
@@ -30,7 +30,7 @@ class ReportDetailsController
         }
 
         try {
-            $result = Report::getSubjectReports($type, $subjectId);
+            $result = ReportModeration::getSubjectReports($type, $subjectId);
         } catch (InvalidArgumentException $e) {
             http_response_code(400);
             exit('Invalid reported subject.');

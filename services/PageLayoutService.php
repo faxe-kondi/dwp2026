@@ -10,8 +10,8 @@ class PageLayoutService
         $newReportCounts = [];
 
         if (Auth::canModerate()) {
-            require_once __DIR__ . '/../models/Report.php';
-            $newReportCounts = Report::getUnreadSubjectCounts((int) Auth::user()['id']);
+            require_once __DIR__ . '/../models/ReportModeration.php';
+            $newReportCounts = ReportModeration::getUnreadSubjectCounts((int) Auth::user()['id']);
         }
 
         return [

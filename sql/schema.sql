@@ -101,20 +101,15 @@ CREATE TABLE reports (
         + (target_post_id IS NOT NULL)
         + (target_comment_id IS NOT NULL) = 1
     ),
+    UNIQUE KEY uq_reports_reporter_user (reporter_id, target_user_id),
+    UNIQUE KEY uq_reports_reporter_post (reporter_id, target_post_id),
+    UNIQUE KEY uq_reports_reporter_comment (reporter_id, target_comment_id),
     CONSTRAINT fk_reports_reporter
     FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (reason_id) REFERENCES report_reasons(id),
     FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (target_post_id) REFERENCES posts(id) ON DELETE CASCADE,
     FOREIGN KEY (target_comment_id) REFERENCES comments(id) ON DELETE CASCADE
-);
-
-CREATE TABLE report_post_dedup (
-    reporter_id INT NOT NULL,
-    post_id     INT NOT NULL,
-    PRIMARY KEY (reporter_id, post_id),
-    FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
 
 CREATE TABLE action_rate_limits (

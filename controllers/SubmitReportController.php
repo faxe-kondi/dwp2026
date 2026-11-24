@@ -61,7 +61,7 @@ class SubmitReportController
         } catch (OutOfBoundsException $e) {
             http_response_code(404);
             echo json_encode(['error' => 'target_not_found']);
-        } catch (DuplicatePostReportException $e) {
+        } catch (DuplicateReportException $e) {
             http_response_code(409);
             echo json_encode(['error' => 'already_reported', 'message' => $e->getMessage()]);
         } catch (DomainException $e) {

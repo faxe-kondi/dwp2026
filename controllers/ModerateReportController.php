@@ -6,7 +6,7 @@ class ModerateReportController
         require_once dirname(__DIR__) . '/support/Auth.php';
         Auth::boot();
         require_once dirname(__DIR__) . '/support/Csrf.php';
-        require_once dirname(__DIR__) . '/models/Report.php';
+        require_once dirname(__DIR__) . '/models/ReportModeration.php';
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
@@ -38,7 +38,7 @@ class ModerateReportController
         }
 
         try {
-            $filename = Report::moderateSubject(
+            $filename = ReportModeration::moderateSubject(
                 (int) Auth::user()['id'],
                 $category,
                 $subjectId,
