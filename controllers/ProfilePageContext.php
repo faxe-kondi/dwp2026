@@ -14,7 +14,7 @@ class ProfilePageContext
         $viewer = User::find((int) Auth::user()['id']);
         if (!$viewer) {
             Auth::logout();
-            header('Location: login.php');
+            header('Location: index.php?route=login');
             exit;
         }
 

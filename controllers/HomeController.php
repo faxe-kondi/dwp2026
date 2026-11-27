@@ -3,17 +3,6 @@ class HomeController
 {
     public static function index(): void
     {
-        $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-        if (
-            is_string($requestPath)
-            && preg_match('~(?:^|/)@([A-Za-z0-9_]{3,30})$~D', $requestPath, $routeMatch) === 1
-        ) {
-            define('DS_PRETTY_PROFILE_ROUTE', true);
-            $_GET['username'] = $routeMatch[1];
-            require dirname(__DIR__) . '/profile.php';
-            exit;
-        }
-
         require_once dirname(__DIR__) . '/support/Auth.php';
         Auth::boot();
         require_once dirname(__DIR__) . '/models/Post.php';

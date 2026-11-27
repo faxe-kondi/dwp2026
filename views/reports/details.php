@@ -6,7 +6,7 @@ View::render('layout/header', get_defined_vars());
 
 <header class="page-head">
   <div class="wrap">
-    <div class="crumb"><a href="reports.php?category=<?= rawurlencode($type); ?>">Reports / <?= htmlspecialchars(ucfirst($type)); ?></a> / Details</div>
+    <div class="crumb"><a href="index.php?route=reports&amp;category=<?= rawurlencode($type); ?>">Reports / <?= htmlspecialchars(ucfirst($type)); ?></a> / Details</div>
     <h1>Report details</h1>
   </div>
 </header>
@@ -15,7 +15,7 @@ View::render('layout/header', get_defined_vars());
 
 <section class="page-body">
   <div class="wrap reports-page">
-    <a class="btn report-back-link" href="reports.php?category=<?= rawurlencode($type); ?>">Back to <?= htmlspecialchars($type); ?></a>
+    <a class="btn report-back-link" href="index.php?route=reports&amp;category=<?= rawurlencode($type); ?>">Back to <?= htmlspecialchars($type); ?></a>
 
     <section class="reported-subject-preview">
       <?php if ($type === 'users'): ?>
@@ -28,7 +28,7 @@ View::render('layout/header', get_defined_vars());
           </div>
         </a>
       <?php elseif ($type === 'posts'): ?>
-        <a class="reported-subject-link reported-post-preview" href="post.php?id=<?= (int) $subject['id']; ?>">
+        <a class="reported-subject-link reported-post-preview" href="index.php?route=post&amp;id=<?= (int) $subject['id']; ?>">
           <img src="<?= htmlspecialchars(ds_post_image_url(ds_post_view($subject))); ?>" alt="<?= htmlspecialchars($subject['title']); ?>">
           <div>
             <h2><?= htmlspecialchars($subject['title']); ?></h2>
@@ -37,7 +37,7 @@ View::render('layout/header', get_defined_vars());
           </div>
         </a>
       <?php else: ?>
-        <a class="reported-subject-link" href="post.php?id=<?= (int) $subject['post_id']; ?>#comment-<?= (int) $subject['id']; ?>">
+        <a class="reported-subject-link" href="index.php?route=post&amp;id=<?= (int) $subject['post_id']; ?>#comment-<?= (int) $subject['id']; ?>">
           <h2>Comment on <?= htmlspecialchars($subject['post_title']); ?></h2>
           <p class="reported-comment-preview"><?= nl2br(htmlspecialchars($subject['content'])); ?></p>
           <p>By @<?= htmlspecialchars($subject['username']); ?></p>
@@ -55,7 +55,7 @@ View::render('layout/header', get_defined_vars());
       <section class="report-review-actions" aria-label="Resolve pending reports">
         <h2>Resolve pending reports</h2>
         <div class="report-review-buttons">
-          <form method="post" action="controllers/ModerateReportController.php">
+          <form method="post" action="index.php?route=moderate-report">
             <?= Csrf::field(); ?>
             <input type="hidden" name="type" value="<?= htmlspecialchars($type); ?>">
             <input type="hidden" name="id" value="<?= (int) $subject['id']; ?>">
@@ -74,7 +74,7 @@ View::render('layout/header', get_defined_vars());
               data-user-banned="<?= $subject['is_banned'] ? 'true' : 'false'; ?>"
             ><?= $subject['is_banned'] ? 'Keep user banned and resolve reports' : 'Ban user and resolve reports'; ?></button>
           <?php elseif ($type !== 'users'): ?>
-            <form method="post" action="controllers/ModerateReportController.php" onsubmit="return confirm('Remove this <?= $type === 'posts' ? 'post' : 'comment'; ?> and resolve the pending reports?');">
+            <form method="post" action="index.php?route=moderate-report" onsubmit="return confirm('Remove this <?= $type === 'posts' ? 'post' : 'comment'; ?> and resolve the pending reports?');">
               <?= Csrf::field(); ?>
               <input type="hidden" name="type" value="<?= htmlspecialchars($type); ?>">
               <input type="hidden" name="id" value="<?= (int) $subject['id']; ?>">

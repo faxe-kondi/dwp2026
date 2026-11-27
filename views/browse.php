@@ -9,7 +9,8 @@ View::render('layout/header', get_defined_vars());
   <h1>Browse all pictures</h1>
 </div></header>
 <section class="page-body"><div class="wrap">
-  <form class="browse-controls" method="get" action="browse.php">
+  <form class="browse-controls" method="get" action="index.php">
+    <input type="hidden" name="route" value="browse">
     <label for="browseSort">Sort by</label>
     <select id="browseSort" name="sort">
       <option value="newest"<?= $sort === 'newest' ? ' selected' : ''; ?>>Newest</option>
@@ -24,12 +25,12 @@ View::render('layout/header', get_defined_vars());
     <div class="photo-grid browse-grid"><?php foreach ($posts as $post) View::render('components/post-card', ['p' => $post, 'pinScope' => null]); ?></div>
     <?php if ($totalPages > 1): ?>
       <nav class="pagination" aria-label="Browse pages">
-        <?php if ($page > 1): ?><a class="btn" href="browse.php?page=<?= $page - 1; ?>&amp;<?= $sortQuery; ?>">Previous</a><?php endif; ?>
+        <?php if ($page > 1): ?><a class="btn" href="index.php?route=browse&amp;page=<?= $page - 1; ?>&amp;<?= $sortQuery; ?>">Previous</a><?php endif; ?>
         <?php $firstPage = max(1, $page - 2); $lastPage = min($totalPages, $page + 2); ?>
         <?php for ($pageNumber = $firstPage; $pageNumber <= $lastPage; $pageNumber++): ?>
-          <a class="btn<?= $pageNumber === $page ? ' btn-solid' : ''; ?>" href="browse.php?page=<?= $pageNumber; ?>&amp;<?= $sortQuery; ?>" <?= $pageNumber === $page ? 'aria-current="page"' : ''; ?>><?= $pageNumber; ?></a>
+          <a class="btn<?= $pageNumber === $page ? ' btn-solid' : ''; ?>" href="index.php?route=browse&amp;page=<?= $pageNumber; ?>&amp;<?= $sortQuery; ?>" <?= $pageNumber === $page ? 'aria-current="page"' : ''; ?>><?= $pageNumber; ?></a>
         <?php endfor; ?>
-        <?php if ($page < $totalPages): ?><a class="btn" href="browse.php?page=<?= $page + 1; ?>&amp;<?= $sortQuery; ?>">Next</a><?php endif; ?>
+        <?php if ($page < $totalPages): ?><a class="btn" href="index.php?route=browse&amp;page=<?= $page + 1; ?>&amp;<?= $sortQuery; ?>">Next</a><?php endif; ?>
       </nav>
     <?php endif; ?>
   <?php else: ?>

@@ -22,7 +22,7 @@ class PostController
             View::renderPage('post/unavailable', [
                 'title' => 'Post not found',
                 'message' => 'This post may have been deleted or is no longer available.',
-                'actionUrl' => 'browse.php',
+                'actionUrl' => 'index.php?route=browse',
                 'actionLabel' => 'Browse posts',
             ]);
             exit;
@@ -83,7 +83,7 @@ class PostController
 
             $pinStatus = $pinAction === 'pin_front' ? 'homepage' : 'profile';
             $pinStatus .= $shouldPin ? '_pinned' : '_unpinned';
-            header('Location: post.php?id=' . $id . '&pin=' . $pinStatus);
+            header('Location: index.php?route=post&id=' . $id . '&pin=' . $pinStatus);
             exit;
         }
 
@@ -140,7 +140,7 @@ class PostController
                 $commentText = trim($submittedComment);
                 try {
                     Comment::create((int) $realRow['id'], (int) Auth::user()['id'], $commentText);
-                    header('Location: post.php?id=' . (int) $realRow['id'] . '&comment=added#comments');
+                    header('Location: index.php?route=post&id=' . (int) $realRow['id'] . '&comment=added#comments');
                     exit;
                 } catch (InvalidArgumentException $e) {
                     $errors[] = $e->getMessage();
@@ -174,7 +174,7 @@ class PostController
                         http_response_code(404);
                         exit('Comment not found.');
                     }
-                    header('Location: post.php?id=' . (int) $realRow['id'] . '&comment=updated#comments');
+                    header('Location: index.php?route=post&id=' . (int) $realRow['id'] . '&comment=updated#comments');
                     exit;
                 } catch (InvalidArgumentException $e) {
                     $errors[] = $e->getMessage();
@@ -209,7 +209,7 @@ class PostController
                 exit('Something went wrong deleting your comment. Please try again.');
             }
 
-            header('Location: post.php?id=' . (int) $realRow['id'] . '&comment=deleted#comments');
+            header('Location: index.php?route=post&id=' . (int) $realRow['id'] . '&comment=deleted#comments');
             exit;
         }
 

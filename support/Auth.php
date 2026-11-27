@@ -89,7 +89,7 @@ class Auth
     public static function requireLogin(): void
     {
         if (!self::check()) {
-            header('Location: login.php');
+            header('Location: index.php?route=login');
             exit;
         }
     }

@@ -5,7 +5,8 @@ View::render('layout/header', get_defined_vars());
 ?>
 <header class="page-head"><div class="wrap"><span class="ghost-num" aria-hidden="true">FIND</span><div class="crumb"><a href="index.php">Home</a> / Search</div><h1>Find your next fit</h1></div></header>
 <section class="page-body"><div class="wrap">
-  <form class="search-page-form" method="get" action="search.php" role="search">
+  <form class="search-page-form" method="get" action="index.php" role="search">
+    <input type="hidden" name="route" value="search">
     <label class="sr-only" for="searchQuery">Search users, post titles, or comments</label>
     <input id="searchQuery" type="search" name="q" value="<?= htmlspecialchars($searchQuery); ?>" placeholder="What are you looking for?" maxlength="100" required>
     <?php if ($searchType !== ''): ?><input type="hidden" name="type" value="<?= htmlspecialchars($searchType); ?>"><?php endif; ?>
@@ -14,7 +15,7 @@ View::render('layout/header', get_defined_vars());
     <p class="search-category-prompt">Search for <strong><?= htmlspecialchars($searchQuery !== '' ? $searchQuery : '...'); ?></strong> in</p>
     <nav class="search-category-options" aria-label="Search category">
       <?php foreach ($searchTypes as $type): ?>
-        <a class="search-category-option<?= $searchType === $type ? ' active' : ''; ?>" data-search-category="<?= htmlspecialchars($type); ?>" href="search.php?q=<?= rawurlencode($searchQuery); ?>&amp;type=<?= rawurlencode($type); ?>" <?= $searchType === $type ? 'aria-current="page"' : ''; ?>><?= ucfirst($type); ?></a>
+        <a class="search-category-option<?= $searchType === $type ? ' active' : ''; ?>" data-search-category="<?= htmlspecialchars($type); ?>" href="index.php?route=search&amp;q=<?= rawurlencode($searchQuery); ?>&amp;type=<?= rawurlencode($type); ?>" <?= $searchType === $type ? 'aria-current="page"' : ''; ?>><?= ucfirst($type); ?></a>
       <?php endforeach; ?>
     </nav>
   </div>
@@ -32,7 +33,7 @@ View::render('layout/header', get_defined_vars());
       <?php elseif ($searchType === 'posts' && $posts): ?>
         <div class="photo-grid"><?php foreach ($posts as $post) View::render('components/post-card', ['p' => $post, 'pinScope' => null]); ?></div>
       <?php elseif ($searchType === 'comments' && $comments): ?>
-        <div class="search-comment-list"><?php foreach ($comments as $comment): ?><article class="search-comment-result"><a class="search-comment-post-link" href="post.php?id=<?= (int) $comment['post_id']; ?>#comments" aria-label="View comment on <?= htmlspecialchars($comment['title']); ?>"></a><a class="search-comment-author" href="<?= htmlspecialchars(ds_user_profile_url($comment['username'])); ?>"><img src="<?= htmlspecialchars(ds_user_avatar_url($comment, 48)); ?>" alt=""><span><?= htmlspecialchars($comment['username']); ?></span></a><span class="search-comment-copy"><span>Commented on <b><?= htmlspecialchars($comment['title']); ?></b></span><span class="search-comment-text"><?= htmlspecialchars($comment['content']); ?></span><span class="search-comment-post-author">Post by <?= htmlspecialchars($comment['post_username']); ?></span></span></article><?php endforeach; ?></div>
+        <div class="search-comment-list"><?php foreach ($comments as $comment): ?><article class="search-comment-result"><a class="search-comment-post-link" href="index.php?route=post&amp;id=<?= (int) $comment['post_id']; ?>#comments" aria-label="View comment on <?= htmlspecialchars($comment['title']); ?>"></a><a class="search-comment-author" href="<?= htmlspecialchars(ds_user_profile_url($comment['username'])); ?>"><img src="<?= htmlspecialchars(ds_user_avatar_url($comment, 48)); ?>" alt=""><span><?= htmlspecialchars($comment['username']); ?></span></a><span class="search-comment-copy"><span>Commented on <b><?= htmlspecialchars($comment['title']); ?></b></span><span class="search-comment-text"><?= htmlspecialchars($comment['content']); ?></span><span class="search-comment-post-author">Post by <?= htmlspecialchars($comment['post_username']); ?></span></span></article><?php endforeach; ?></div>
       <?php else: ?>
         <p class="search-empty">No <?= htmlspecialchars($searchType); ?> found for this search.</p>
       <?php endif; ?>
@@ -42,7 +43,7 @@ View::render('layout/header', get_defined_vars());
         $firstPage = max(1, min($page - intdiv($pageWindow, 2), $totalPages - $pageWindow + 1));
         $lastPage = min($totalPages, $firstPage + $pageWindow - 1);
         $pageUrl = static function (int $pageNumber) use ($searchQuery, $searchType): string {
-          return 'search.php?q=' . rawurlencode($searchQuery) . '&type=' . rawurlencode($searchType) . '&page=' . $pageNumber;
+          return 'index.php?route=search&q=' . rawurlencode($searchQuery) . '&type=' . rawurlencode($searchType) . '&page=' . $pageNumber;
         };
         ?>
         <nav class="pagination search-pagination" aria-label="<?= ucfirst($searchType); ?> search pages">

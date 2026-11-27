@@ -76,23 +76,15 @@ class ModerateReportController
             }
         }
 
-        if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
-            ModerateReportController::handle();
-        }
-
-        if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
-            ModerateReportController::handle();
-        }
-
         if ($action === 'remove') {
             $query = ['category' => $category, 'moderation' => 'removed'];
             if ($cleanupFailed) {
                 $query['cleanup_failed'] = '1';
             }
-            header('Location: ../reports.php?' . http_build_query($query));
+            header('Location: index.php?route=reports&' . http_build_query($query));
         } else {
             header(
-                'Location: ../report-details.php?' . http_build_query([
+                'Location: index.php?route=report-details&' . http_build_query([
                     'type' => $category,
                     'id' => $subjectId,
                     'moderation' => $action === 'ban' ? 'banned' : 'dismissed',

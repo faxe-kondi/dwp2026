@@ -53,7 +53,7 @@ $renderPagination = static function (int $page, int $totalPages) use ($pageUrl, 
         <?php foreach ($categories as $key => $label): ?>
           <a
             class="search-category-option<?= $category === $key ? ' active' : ''; ?>"
-            href="reports.php?category=<?= rawurlencode($key); ?>"
+            href="index.php?route=reports&amp;category=<?= rawurlencode($key); ?>"
             <?= $category === $key ? 'aria-current="page"' : ''; ?>
           ><?= htmlspecialchars($label); ?><?php if ($newReports[$key] > 0): ?> <span class="report-tab-count"><?= number_format($newReports[$key]); ?></span><?php endif; ?></a>
         <?php endforeach; ?>
@@ -74,7 +74,7 @@ $renderPagination = static function (int $page, int $totalPages) use ($pageUrl, 
         <?php elseif ($category === 'users'): ?>
           <div class="user-grid">
             <?php foreach ($results['items'] as $user): ?>
-              <a class="user-card reported-user-card" href="report-details.php?type=users&amp;id=<?= (int) $user['id']; ?>" aria-label="View reports for @<?= htmlspecialchars($user['username']); ?>">
+              <a class="user-card reported-user-card" href="index.php?route=report-details&amp;type=users&amp;id=<?= (int) $user['id']; ?>" aria-label="View reports for @<?= htmlspecialchars($user['username']); ?>">
                 <div class="user-card-inner">
                   <span class="user-card-avatar"><img src="<?= htmlspecialchars(ds_user_avatar_url($user, 96)); ?>" alt=""></span>
                   <span class="user-card-name">@<?= htmlspecialchars($user['username']); ?></span>
@@ -95,7 +95,7 @@ $renderPagination = static function (int $page, int $totalPages) use ($pageUrl, 
         <?php elseif ($category === 'posts'): ?>
           <div class="photo-grid">
             <?php foreach ($results['items'] as $post): ?>
-              <a class="photo-card reported-photo-card" href="report-details.php?type=posts&amp;id=<?= (int) $post['id']; ?>" aria-label="View reports for <?= htmlspecialchars($post['title']); ?>">
+              <a class="photo-card reported-photo-card" href="index.php?route=report-details&amp;type=posts&amp;id=<?= (int) $post['id']; ?>" aria-label="View reports for <?= htmlspecialchars($post['title']); ?>">
                 <div class="photo-card-inner">
                   <span class="frame">
                     <img src="<?= htmlspecialchars(ds_post_image_url(ds_post_view($post))); ?>" alt="<?= htmlspecialchars($post['title']); ?>" loading="lazy">
@@ -122,7 +122,7 @@ $renderPagination = static function (int $page, int $totalPages) use ($pageUrl, 
           <div class="search-comment-list">
             <?php foreach ($results['items'] as $comment): ?>
               <article class="search-comment-result reported-comment-result">
-                <a class="search-comment-post-link" href="report-details.php?type=comments&amp;id=<?= (int) $comment['id']; ?>" aria-label="View reports for comment on <?= htmlspecialchars($comment['post_title']); ?>"></a>
+                <a class="search-comment-post-link" href="index.php?route=report-details&amp;type=comments&amp;id=<?= (int) $comment['id']; ?>" aria-label="View reports for comment on <?= htmlspecialchars($comment['post_title']); ?>"></a>
                 <a class="search-comment-author" href="<?= htmlspecialchars(ds_user_profile_url($comment['username'])); ?>">
                   <img src="<?= htmlspecialchars(ds_user_avatar_url(['username' => $comment['username'], 'avatar' => $comment['avatar'] ?? 'default.png'], 48)); ?>" alt="">
                   <span><?= htmlspecialchars($comment['username']); ?></span>

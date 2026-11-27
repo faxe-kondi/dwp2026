@@ -53,7 +53,7 @@ class ProfileController
         if (!$viewer) {
             if ($isOwnProfile) {
                 Auth::logout();
-                header('Location: login.php');
+                header('Location: index.php?route=login');
                 exit;
             }
 

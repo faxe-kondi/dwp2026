@@ -48,7 +48,7 @@ class EditPostController
 
                 $notice = $result['notice'];
                 if ($notice === '') {
-                    header('Location: post.php?id=' . $id);
+                    header('Location: index.php?route=post&id=' . $id);
                     exit;
                 }
                 $row = Post::findById($id);

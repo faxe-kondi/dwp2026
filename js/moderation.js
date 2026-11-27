@@ -116,8 +116,8 @@ document.addEventListener('DOMContentLoaded', function () {
       var resolvesReports = button.getAttribute('data-resolve-reports') === 'true';
       var isAlreadyBanned = button.getAttribute('data-user-banned') === 'true';
       banUserForm.action = resolvesReports
-        ? 'controllers/ModerateReportController.php'
-        : 'controllers/ModerateUserController.php';
+        ? 'index.php?route=moderate-report'
+        : 'index.php?route=moderate-user';
       if (resolvesReports) {
         banUserForm.elements.namedItem('type').value = 'users';
         banUserForm.elements.namedItem('id').value = button.getAttribute('data-user-id');

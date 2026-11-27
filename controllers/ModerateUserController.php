@@ -49,7 +49,7 @@ class ModerateUserController
                 $action === 'ban',
                 trim($reason)
             );
-            header('Location: ../@' . rawurlencode($target['username']) . '?moderation=' . ($action === 'ban' ? 'banned' : 'unbanned'));
+            header('Location: @' . rawurlencode($target['username']) . '?moderation=' . ($action === 'ban' ? 'banned' : 'unbanned'));
             exit;
         } catch (InvalidArgumentException $e) {
             http_response_code(400);
@@ -66,8 +66,4 @@ class ModerateUserController
             exit('Something went wrong updating this account. Please try again.');
         }
     }
-}
-
-if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
-    ModerateUserController::handle();
 }

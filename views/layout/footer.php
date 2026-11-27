@@ -13,22 +13,22 @@ require_once dirname(__DIR__, 2) . '/support/Csrf.php';
         <h4>SITE</h4>
         <ul>
           <li><a href="index.php">Home</a></li>
-          <li><a href="browse.php">Browse</a></li>
-          <li><a href="search.php">Search</a></li>
-          <li><a href="about.php">About</a></li>
+          <li><a href="index.php?route=browse">Browse</a></li>
+          <li><a href="index.php?route=search">Search</a></li>
+          <li><a href="index.php?route=about">About</a></li>
         </ul>
       </div>
       <?php if (Auth::check()): ?>
       <div>
         <h4>ACCOUNT</h4>
         <ul>
-          <li><a href="upload.php">Upload</a></li>
+          <li><a href="index.php?route=upload">Upload</a></li>
           <li><a href="@<?= rawurlencode(Auth::user()['username']); ?>">Your profile</a></li>
-          <li><a href="liked.php">Your likes</a></li>
-          <li><a href="following.php">Following</a></li>
-          <li><a href="blocked.php">Blocked users</a></li>
-          <li><a href="settings.php">Settings</a></li>
-          <li><a href="logout.php">Log out</a></li>
+          <li><a href="index.php?route=liked">Your likes</a></li>
+          <li><a href="index.php?route=following">Following</a></li>
+          <li><a href="index.php?route=blocked">Blocked users</a></li>
+          <li><a href="index.php?route=settings">Settings</a></li>
+          <li><a href="index.php?route=logout">Log out</a></li>
         </ul>
       </div>
       <?php endif; ?>
@@ -49,7 +49,7 @@ require_once dirname(__DIR__, 2) . '/support/Csrf.php';
 
 <dialog id="reportModal" class="modal">
   <div class="modal-box">
-    <form id="reportForm" action="controllers/SubmitReportController.php" method="post">
+    <form id="reportForm" action="index.php?route=submit-report" method="post">
       <?= Csrf::field(); ?>
       <input type="hidden" name="target_type">
       <input type="hidden" name="target_id">
@@ -96,7 +96,7 @@ require_once dirname(__DIR__, 2) . '/support/Csrf.php';
 
 <dialog id="banUserModal" class="modal">
   <div class="modal-box">
-    <form id="banUserForm" action="controllers/ModerateUserController.php" method="post">
+    <form id="banUserForm" action="index.php?route=moderate-user" method="post">
       <?= Csrf::field(); ?>
       <input type="hidden" name="user_id">
       <input type="hidden" name="type">

@@ -51,7 +51,7 @@ class ReportsController
         }
 
         $pageUrl = static function (int $pageNumber) use ($category): string {
-            return 'reports.php?' . http_build_query([
+            return 'index.php?route=reports&' . http_build_query([
                 'category' => $category,
                 'page' => $pageNumber,
             ]);

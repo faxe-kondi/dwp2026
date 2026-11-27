@@ -9,7 +9,7 @@ View::render('layout/header', get_defined_vars());
   <p class="admin-intro">Manage the site's colors, About page, community rules, and contact details.</p>
   <?php if ($success): ?><div class="form-success" role="status">Site settings saved.</div><?php endif; ?>
   <?php if ($errors): ?><div class="form-errors" role="alert"><ul><?php foreach (array_unique($errors) as $error): ?><li><?= htmlspecialchars($error); ?></li><?php endforeach; ?></ul></div><?php endif; ?>
-  <form method="post" action="admin.php">
+  <form method="post" action="index.php?route=admin">
     <?= Csrf::field(); ?>
     <section class="admin-section" aria-labelledby="admin-colors-heading">
       <h2 id="admin-colors-heading">Color scheme</h2><p class="field-hint">Choose the primary accent and secondary highlight colors used across the site.</p>

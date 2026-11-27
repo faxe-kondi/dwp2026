@@ -10,7 +10,7 @@ $reportTarget = '@' . $p['username'] . "'s post";
 ?>
 <article class="photo-card reveal">
   <div class="photo-card-inner">
-    <a href="post.php?id=<?= $p['id']; ?>" class="frame" style="display:block;">
+    <a href="index.php?route=post&amp;id=<?= $p['id']; ?>" class="frame" style="display:block;">
       <?php if (!empty($p['hot'])): ?><span class="flame-badge">&#128293; HOT</span><?php endif; ?>
       <?php if ($pinScope === 'homepage' && !empty($p['front_pinned'])): ?><span class="pin-badge">&#128204; Pinned</span><?php endif; ?>
       <?php if ($pinScope === 'profile' && !empty($p['profile_pinned'])): ?><span class="pin-badge">&#128204; Pinned</span><?php endif; ?>
@@ -21,7 +21,7 @@ $reportTarget = '@' . $p['username'] . "'s post";
         <img src="<?= htmlspecialchars($avatar); ?>" alt="<?= htmlspecialchars($p['username']); ?>">
         <span>@<?= htmlspecialchars($p['username']); ?></span>
       </a>
-      <a href="post.php?id=<?= $p['id']; ?>" style="color:inherit;">
+      <a href="index.php?route=post&amp;id=<?= $p['id']; ?>" style="color:inherit;">
         <p class="photo-title"><?= htmlspecialchars($p['title']); ?></p>
         <?php if ($p['caption'] !== ''): ?><p class="caption"><?= htmlspecialchars($p['caption']); ?></p><?php endif; ?>
       </a>
@@ -33,7 +33,7 @@ $reportTarget = '@' . $p['username'] . "'s post";
           </span>
         <?php else: ?>
           <?php if (Auth::check()): ?>
-            <button type="button" class="<?= $likeClass; ?>" data-like-url="controllers/LikeController.php" data-post-id="<?= $p['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-likes="<?= $p['likes']; ?>" data-liked="<?= $isLiked ? 'true' : 'false'; ?>" aria-pressed="<?= $isLiked ? 'true' : 'false'; ?>" aria-label="<?= $isLiked ? 'Unlike post' : 'Like post'; ?>">
+            <button type="button" class="<?= $likeClass; ?>" data-like-url="index.php?route=like" data-post-id="<?= $p['id']; ?>" data-csrf-token="<?= htmlspecialchars(Csrf::token()); ?>" data-likes="<?= $p['likes']; ?>" data-liked="<?= $isLiked ? 'true' : 'false'; ?>" aria-pressed="<?= $isLiked ? 'true' : 'false'; ?>" aria-label="<?= $isLiked ? 'Unlike post' : 'Like post'; ?>">
           <?php else: ?>
             <button type="button" class="<?= $likeClass; ?>" data-likes="<?= $p['likes']; ?>">
           <?php endif; ?>

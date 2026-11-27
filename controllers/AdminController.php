@@ -57,7 +57,7 @@ class AdminController
             if (!$errors) {
                 try {
                     SiteSettings::updateMany($settings);
-                    header('Location: admin.php?saved=1');
+                    header('Location: index.php?route=admin&saved=1');
                     exit;
                 } catch (PDOException $e) {
                     error_log('Site settings update failed: ' . $e->getMessage());

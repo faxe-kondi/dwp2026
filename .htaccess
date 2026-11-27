@@ -1,2 +1,10 @@
 RewriteEngine On
-RewriteRule ^@([A-Za-z0-9_]{3,30})$ index.php [L]
+RewriteRule ^@([A-Za-z0-9_]{3,30})$ index.php?_route=profile&username=$1 [QSA,L]
+RewriteRule ^(about|admin|blocked|browse|edit-post|following|liked|login|logout|post|profile|report-details|reports|search|settings|signup|upload)\.php$ index.php?_route=$1 [QSA,L]
+RewriteRule ^controllers/BlockController\.php$ index.php?_route=block [QSA,L]
+RewriteRule ^controllers/FollowController\.php$ index.php?_route=follow [QSA,L]
+RewriteRule ^controllers/LikeController\.php$ index.php?_route=like [QSA,L]
+RewriteRule ^controllers/SubmitReportController\.php$ index.php?_route=submit-report [QSA,L]
+RewriteRule ^controllers/ModerateReportController\.php$ index.php?_route=moderate-report [QSA,L]
+RewriteRule ^controllers/ModerateUserController\.php$ index.php?_route=moderate-user [QSA,L]
+RewriteRule ^(?!index\.php$).+\.php$ - [F,L]

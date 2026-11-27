@@ -9,7 +9,7 @@ View::render('layout/header', get_defined_vars());
 <div class="stripe-bar" aria-hidden="true"></div>
 <section class="page-body"><div class="wrap upload-wrap">
   <?php if (!empty($errors)): ?><div class="form-errors"><ul><?php foreach ($errors as $err): ?><li><?= htmlspecialchars($err); ?></li><?php endforeach; ?></ul></div><?php endif; ?>
-  <form method="post" action="upload.php" enctype="multipart/form-data" class="upload-layout">
+  <form method="post" action="index.php?route=upload" enctype="multipart/form-data" class="upload-layout">
     <?= Csrf::field(); ?>
     <div class="upload-photo"><div class="field"><div class="dropzone" id="dropzone">
       <img id="dropzonePreview" alt="Selected photo preview" hidden><div class="icon">&#8593;</div>

@@ -27,22 +27,22 @@ require_once dirname(__DIR__, 2) . '/support/Auth.php';
     <a href="index.php" class="brand">DEAD<span>STOCK</span></a>
     <ul class="nav-links" id="navLinks">
       <li><a href="index.php" class="<?= $active === 'home' ? 'active' : ''; ?>">Home</a></li>
-      <li><a href="browse.php" class="<?= $active === 'browse' ? 'active' : ''; ?>">Browse</a></li>
-      <li><a href="search.php" class="<?= $active === 'search' ? 'active' : ''; ?>">Search</a></li>
-      <li><a href="about.php" class="<?= $active === 'about' ? 'active' : ''; ?>">About</a></li>
+      <li><a href="index.php?route=browse" class="<?= $active === 'browse' ? 'active' : ''; ?>">Browse</a></li>
+      <li><a href="index.php?route=search" class="<?= $active === 'search' ? 'active' : ''; ?>">Search</a></li>
+      <li><a href="index.php?route=about" class="<?= $active === 'about' ? 'active' : ''; ?>">About</a></li>
       <?php if (Auth::check()): ?>
         <?php if (Auth::canModerate()): ?>
-          <li><a href="reports.php" class="<?= $active === 'reports' ? 'active' : ''; ?>"<?= array_sum($newReportCounts) > 0 ? ' aria-label="Reports, new reports available" title="New reported items"' : ''; ?>>Reports<?php if (array_sum($newReportCounts) > 0): ?> <span class="report-nav-alert" aria-hidden="true">!</span><?php endif; ?></a></li>
+          <li><a href="index.php?route=reports" class="<?= $active === 'reports' ? 'active' : ''; ?>"<?= array_sum($newReportCounts) > 0 ? ' aria-label="Reports, new reports available" title="New reported items"' : ''; ?>>Reports<?php if (array_sum($newReportCounts) > 0): ?> <span class="report-nav-alert" aria-hidden="true">!</span><?php endif; ?></a></li>
         <?php endif; ?>
         <?php if (Auth::role() === 'owner'): ?>
-          <li><a href="admin.php" class="<?= $active === 'admin' ? 'active' : ''; ?>">Admin</a></li>
+          <li><a href="index.php?route=admin" class="<?= $active === 'admin' ? 'active' : ''; ?>">Admin</a></li>
         <?php endif; ?>
         <li><a href="@<?= rawurlencode(Auth::user()['username']); ?>" class="<?= $active === 'profile' ? 'active' : ''; ?>">Profile</a></li>
-        <li><a href="upload.php" class="btn btn-solid <?= $active === 'upload' ? 'active' : ''; ?>" style="padding:9px 16px; font-size:13px;">+ Upload</a></li>
-        <li><a href="logout.php" class="<?= $active === 'logout' ? 'active' : ''; ?>">Log Out</a></li>
+        <li><a href="index.php?route=upload" class="btn btn-solid <?= $active === 'upload' ? 'active' : ''; ?>" style="padding:9px 16px; font-size:13px;">+ Upload</a></li>
+        <li><a href="index.php?route=logout" class="<?= $active === 'logout' ? 'active' : ''; ?>">Log Out</a></li>
       <?php else: ?>
-        <li><a href="login.php" class="<?= $active === 'login' ? 'active' : ''; ?>">Log In</a></li>
-        <li><a href="signup.php" class="btn <?= $active === 'signup' ? 'active' : ''; ?>" style="padding:9px 16px; font-size:13px;">Sign Up</a></li>
+        <li><a href="index.php?route=login" class="<?= $active === 'login' ? 'active' : ''; ?>">Log In</a></li>
+        <li><a href="index.php?route=signup" class="btn <?= $active === 'signup' ? 'active' : ''; ?>" style="padding:9px 16px; font-size:13px;">Sign Up</a></li>
       <?php endif; ?>
     </ul>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">&#9776;</button>

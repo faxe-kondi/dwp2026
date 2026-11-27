@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (searchTerm) searchTerm.textContent = query;
 
       document.querySelectorAll('[data-search-category]').forEach(function (option) {
-        var url = new URL('search.php', window.location.href);
+        var url = new URL('index.php?route=search', window.location.href);
         url.searchParams.set('q', searchInput.value.trim());
         url.searchParams.set('type', option.getAttribute('data-search-category'));
         option.href = url.toString();

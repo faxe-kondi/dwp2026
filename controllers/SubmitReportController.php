@@ -74,7 +74,3 @@ class SubmitReportController
         }
     }
 }
-
-if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
-    SubmitReportController::handle();
-}

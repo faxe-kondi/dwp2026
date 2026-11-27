@@ -28,7 +28,7 @@ class UploadController
                     $caption,
                     $_FILES['photo'] ?? null
                 );
-                header('Location: post.php?id=' . $postId);
+                header('Location: index.php?route=post&id=' . $postId);
                 exit;
             } catch (InvalidArgumentException $e) {
                 $errors[] = $e->getMessage();
